@@ -60,7 +60,6 @@ paths:
                   description: antrags-TTL Datei
               required:
                 - antrag_type
-                - url
                 - timestamp
                 - ttl_file
       responses:
