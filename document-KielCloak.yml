@@ -51,10 +51,6 @@ paths:
                   type: string
                   description: Art des Antrags
                   example: "begruessungsgeld"
-                url:
-                  type: string
-                  format: uri
-                  description: URL zur TTL-Datei im Studenten Pod
                 timestamp:
                   type: integer
                   description: Unix timestamp in ms
