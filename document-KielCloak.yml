@@ -1,0 +1,77 @@
+openapi: 3.0.0
+info:
+  title: KielCloak
+  description: API fuer die Kommunikation zwischen Front- und Backend von mein.Kiel App
+  version: "1.0.0"
+paths:
+  /send_address:
+    post:
+      summary: Neue Adresse inkl. TTL-Datei senden
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL zu "adress.ttl" im Studenten Pod
+                timestamp:
+                  type: integer
+                  description: Unix timestamp in ms
+              required:
+                - url
+                - timestamp
+      responses:
+        "200":
+          description: Address saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "400":
+          description: Invalid input
+  /antrag/new:
+    post:
+      summary: Antrag inkl. TTL-Datei senden
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                antrag_type:
+                  type: string
+                  description: Art des Antrags
+                  example: "begruessungsgeld"
+                timestamp:
+                  type: integer
+                  description: Unix timestamp in ms
+                ttl_file:
+                  type: string
+                  format: binary
+                  description: antrags-TTL Datei
+              required:
+                - antrag_type
+                - timestamp
+                - ttl_file
+      responses:
+        "200":
+          description: Antrag gespeichert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "400":
+          description: Invalid input
