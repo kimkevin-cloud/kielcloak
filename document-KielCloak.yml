@@ -14,10 +14,15 @@ paths:
             schema:
               type: object
               properties:
-                url:
+                adress_src_url:
                   type: string
                   format: uri
                   description: URL zu "adress.ttl" im Studenten Pod
+                target_src_urls:
+                  type: array
+                  items: 
+                    type: string
+                  example: ["https://solid.valetudo.casa/uni/MailBox", "https://solid.valetudo.casa/bank/MailBox"]
                 timestamp:
                   type: integer
                   description: Unix timestamp in ms
