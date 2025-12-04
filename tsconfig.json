@@ -3,7 +3,7 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "./src",
-    "outDir": "./dist",
+    "outDir": "./build",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
@@ -30,6 +30,11 @@
     // "noFallthroughCasesInSwitch": true,
     // "noPropertyAccessFromIndexSignature": true,
 
+    // Weitere Options für KielCloak Implementierung
+    "allowJs": true, // Tells TypeScript to read JS files, as normally they are ignored as source files
+
+
+
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
@@ -41,7 +46,7 @@
     "esModuleInterop": true,
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "build"]
 }
 
 
