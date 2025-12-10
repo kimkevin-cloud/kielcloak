@@ -96,11 +96,15 @@ app.post("/save_address", async (req: Request, res: Response) => {
       });
     }
 
+    const filename = sourceURL.split("/").pop(); // "adressenbestaetigung-1765307371.ttl"
+    const newFilename = filename?.replace(/^([^-]+)-/, `$1_${podname}-`);
+    
     for (const element of targets) {
       try {
-        const file = await createFile(sourceURL, element, podname);
+        const file = await createFile(sourceURL, newFilename, element);
         console.log(`Nächster Empfänger: ${element}`);
-        await moveData(file, element);
+        await moveData(file, newFilename, element);
+
       } catch (error) {
         console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
 
@@ -129,12 +133,14 @@ function extractPodname(url: string): string {
   return match?.[1]?.toString() ?? "";
 }
 
-async function createFile(sourceURL: string,target: string, podname: string): Promise<File> {
-  const filename = sourceURL.split("/").pop(); // "adressenbestaetigung-1765307371.ttl"
-  const newFilename = filename?.replace(/^([^-]+)-/, `$1_${podname}-`);
+async function createFile(sourceURL: string, filename: string, targetURL: string): Promise<Blob> {
+
+  if (!filename.endsWith(".ttl")) {
+    throw new Error("Dateiname muss mit .ttl enden!");
+  }
 
   const content = `
-@prefix : <${target}/${newFilename}>.
+@prefix : <${targetURL}${filename}>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 
 :adressdata
@@ -142,16 +148,13 @@ async function createFile(sourceURL: string,target: string, podname: string): Pr
   `.trim();
 
   const blob = new Blob([content], { type: "text/turtle" });
-  const file = new File([blob], `${newFilename}`, {
-    type: "text/turtle",
-  });
 
-  return file;
+  return blob;
 }
 
-async function moveData(file: File, targetURL: string) {
-  if (!file || !targetURL) {
-    throw new Error("sourceURL oder targetURL ist nicht definiert!");
+async function moveData(file: Blob, fileName: string, targetURL: string) {
+  if (!file || !targetURL || !fileName || targetURL === "" || fileName === "") {
+    throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
   }
   // Ohne Login oder WebID kein Zugriff auf den Pod möglich
   if (!session.info.webId) {
@@ -161,7 +164,7 @@ async function moveData(file: File, targetURL: string) {
   console.log(`Daten werden an ${targetURL} geschickt`);
 
   try {
-    await overwriteFile(targetURL, file, {
+    await overwriteFile(targetURL + fileName, file, {
       contentType: "text/turtle",
       fetch: session.fetch,
     });
@@ -213,8 +216,10 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       });
     }
 
+    const filename = `antrag_${antrag_type}_${podname}.ttl`;
+
     try {
-      await moveData(ttl_file, "");
+      await moveData(ttl_file, filename, process.env.KIELCLOAK_POD_URL || "");
     } catch (error) {
       console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
 

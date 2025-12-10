@@ -106,11 +106,12 @@ describe("SessionLogin", () => {
 describe("createFile", () => {
   it("should create a TTL file with correct content", async () => {
     const sourceURL = "https://example.com/data";
-    const podname = "testuser";
+    const filename = "test.ttl";
+    const targetURL = "https://pod.example.com/MailBox/";
 
-    const result = await createFile(sourceURL, podname);
+    const result = await createFile(sourceURL, filename, targetURL);
 
-    expect(result).toBeInstanceOf(File);
+    expect(result).toBeInstanceOf(Blob);
     expect(result.type).toBe("text/turtle");
   });
 });
@@ -125,35 +126,41 @@ describe("moveData", () => {
     }));
     
     const sourceURL = "https://example.com/data";
-    const podname = "testuser";
-    const targetURL = "https://pod.example.com/data.ttl";
+    const filename = "test.ttl";
+    const targetURL = "https://pod.example.com/MailBox/";
 
-    const file = await createFile(sourceURL, podname);
+    const file = await createFile(sourceURL, filename, targetURL);
 
-    expect(file).toBeInstanceOf(File);
-    await moveData(file, targetURL);
+    expect(file).toBeInstanceOf(Blob);
+    await moveData(file, filename, targetURL);
 
-    expect(overwriteFile).toHaveBeenCalledWith(targetURL, file, {
+    expect(overwriteFile).toHaveBeenCalledWith(targetURL + filename, file, {
       contentType: "text/turtle",
       fetch: session.fetch,
     });
   });
 
   it("should throw error if file or targetURL is missing", async () => {
-    const file = await createFile("https://example.com/data", "testuser");
-    await expect(moveData(null as any, "target")).rejects.toThrow(
-      "sourceURL oder targetURL ist nicht definiert!"
+    const file = await createFile("https://example.com/data", "test.ttl", "https://pod.example.com/MailBox/");
+    await expect(moveData(null as any, "test.ttl", "https://pod.example.com/MailBox/")).rejects.toThrow(
+      "sourceURL, fileName oder targetURL ist nicht definiert!"
     );
-    await expect(moveData(file, "")).rejects.toThrow(
-      "sourceURL oder targetURL ist nicht definiert!"
+    await expect(moveData(file, "", "")).rejects.toThrow(
+      "sourceURL, fileName oder targetURL ist nicht definiert!"
     );
   });
 
+  it("should throw error if file doesn't end with .ttl", async () => {
+    await expect(createFile("https://example.com/data", "test.txt", "https://pod.example.com/MailBox/")).rejects.toThrow(
+      "Dateiname muss mit .ttl enden!"
+    )
+  })
+
   it("should throw error if not logged in", async () => {
     session.info.webId = null;
-    const file = await createFile("https://example.com/data", "testuser");
+    const file = await createFile("https://example.com/data", "test.ttl", "https://pod.example.com/MailBox/");
 
-    await expect(moveData(file, "target")).rejects.toThrow(
+    await expect(moveData(file, "test.ttl", "https://pod.example.com/MailBox/")).rejects.toThrow(
       "KielCloak nicht eingeloggt oder WebID fehlt."
     );
   });
