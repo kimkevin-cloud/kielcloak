@@ -22,10 +22,12 @@ app.get("/", (_: Request, res: Response) => {
   res.send("Backend running!");
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-  SessionLogin();
-});
+if (process.env.NODE_ENV != "test") {
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+    SessionLogin();
+  });
+}
 
 async function SessionLogin() {
   const clientId = process.env.CLIENT_ID;

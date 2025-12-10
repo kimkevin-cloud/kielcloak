@@ -4,7 +4,8 @@
   "description": " 'KielCloak' Backend für Anwendung",
   "main": "index.ts",
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev": "ts-node src/index.ts",
     "build": "webpack",
     "start": "webpack serve --open"
