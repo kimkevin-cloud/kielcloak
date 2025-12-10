@@ -80,6 +80,27 @@ app.post("/save_address", async (req: Request, res: Response) => {
   return res.status(200).send("OK");
 });
 
+app.post("/antrag/new", async (req : Request, res : Response) => {
+  const WebID = req.body.web_id;
+  const antrag_type = req.body.antrag_type;
+  const ttl_file = req.body.ttl_file;
+
+  if (!WebID || ! antrag_type || !ttl_file) {
+    throw new Error("web_id, antrag_type oder ttl_file nicht definiert!");
+  }
+
+  try {
+
+    // Implementierung
+
+  } catch (error) {
+    console.error(error);
+  }
+
+
+  res.status(200).send("OK");
+});
+
 
 function extractPodname(url: string): string {
   const match = url.match(/https?:\/\/[^/]+\/([^/]+)\/profile/);

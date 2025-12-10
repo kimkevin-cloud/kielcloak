@@ -11,6 +11,8 @@ async function SessionLogin() : Promise<void>
 /**
  * Extrahiert Podname aus eine gegebene WebID
  * @param url: WebID
+ * 
+ * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
  */
 function extractPodname(url: string): string
 
