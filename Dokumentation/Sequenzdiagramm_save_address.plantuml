@@ -1,0 +1,27 @@
+@startuml Adresse an Dritten nach Ummeldungsprozess weiterleiten
+
+participant UserPod
+actor User
+participant Frontend
+participant KielCloak
+actor "Third party Pods" as Dritten
+
+== Adresse an Dritten nach Ummeldungsprozess weiterleiten ==
+
+Frontend -> UserPod : Liest Profildaten aus Pod
+UserPod --> Frontend
+Frontend -> UserPod : Liest Adresse aus addressbesteatigung-{Milisekunden}.ttl
+Frontend -> User : Fragt, ob Daten richtig sind
+User -> Frontend : Bestätigung
+Frontend -> KielCloak : /save_address(WebID, Link zu Address-Datei \n und Dritten Liste
+
+KielCloak -> KielCloak : extrahiert podname aus WebID
+KielCloak -> KielCloak : Erstellt Datei mit Adressenverweis für die Dritten
+KielCloak -> Dritten : Schickt erstellte TTL-Datei mit Adressenverweis
+
+Dritten --> KielCloak : Response OK
+KielCloak --> Frontend : Response OK
+
+Frontend -> User : Erfolgsmeldung
+
+@enduml
