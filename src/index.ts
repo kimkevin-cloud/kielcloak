@@ -66,7 +66,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
   const targets = req.body.targets;
 
   // Input validation
-  if ( !WebID || !sourceURL || !targets || targets.length === 0 ) {
+  if (!WebID || !sourceURL || !targets || targets.length === 0) {
     const errorMessage = "Missing or invalid parameters";
     console.error(errorMessage);
     return res.status(400).json({
@@ -81,31 +81,28 @@ app.post("/save_address", async (req: Request, res: Response) => {
     console.error(errorMessage);
     return res.status(401).json({
       error: errorMessage,
-      message: "KielCloak session not authenticated or WebID missing",
+      message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
 
   try {
     const podname = extractPodname(WebID);
     if (!podname) {
-      const errorMessage = "Invalid WebID";
+      const errorMessage = "Ungültige WebID";
       console.error(errorMessage);
       return res.status(400).json({
         error: errorMessage,
-        message: "Could not extract podname from WebID",
+        message: "Podname konnte aus WebID gelesen werden",
       });
     }
 
-    const file = await createFile(sourceURL, podname);
-
     for (const element of targets) {
       try {
-        console.log(`Next recipient: ${element}`);
+        const file = await createFile(sourceURL, element, podname);
+        console.log(`Nächster Empfänger: ${element}`);
         await moveData(file, element);
-
       } catch (error) {
-
-        console.error(`Error sharing with ${element}:`, error);
+        console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
 
         // Return error immediately for the first failed target
         return res.status(500).json({
@@ -114,52 +111,30 @@ app.post("/save_address", async (req: Request, res: Response) => {
       }
     }
 
-    console.log("All recipients addressed successfully!");
+    console.log("Kommunikation mit allen Dritten erfolgreich!!");
     return res.status(200).json({
       message: "OK",
     });
-
   } catch (error) {
-    console.error("Unexpected error in /save_address:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Unerwarteter Fehler in /save_address:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: "An unexpected error occurred while processing the request",
-      details: errorMessage,
+      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
     });
   }
 });
-
-/* app.post("/antrag/new", async (req: Request, res: Response) => {
-  const WebID = req.body.web_id;
-  const antrag_type = req.body.antrag_type;
-  const ttl_file = req.body.ttl_file;
-
-  if (!WebID || !antrag_type || !ttl_file) {
-    throw new Error("web_id, antrag_type oder ttl_file nicht definiert!");
-  }
-
-  try {
-    // Implementierung
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in /antrag/new:", errorMessage);
-  }
-
-  res.status(200).send("OK");
-}); */
 
 function extractPodname(url: string): string {
   const match = url.match(/https?:\/\/[^/]+\/([^/]+)\/profile/);
   return match?.[1]?.toString() ?? "";
 }
 
-async function createFile(sourceURL: string, podname: string): Promise<File> {
+async function createFile(sourceURL: string,target: string, podname: string): Promise<File> {
   const filename = sourceURL.split("/").pop(); // "adressenbestaetigung-1765307371.ttl"
   const newFilename = filename?.replace(/^([^-]+)-/, `$1_${podname}-`);
 
   const content = `
-@prefix : <http://localhost:3000/stud/MailBox/${newFilename}>.
+@prefix : <${target}/${newFilename}>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 
 :adressdata
@@ -193,13 +168,74 @@ async function moveData(file: File, targetURL: string) {
 
     console.log(`Daten in ${targetURL} erfolgreich gespeichert!`);
     return;
-  
   } catch (error) {
     console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error( `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`);
+    throw new Error(
+      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`
+    );
   }
 }
+
+app.post("/antrag/new", async (req: Request, res: Response) => {
+  const WebID = req.body.web_id;
+  const antrag_type = req.body.antrag_type;
+  const ttl_file = req.body.ttl_file;
+
+  // Input validation
+  if (!WebID || !antrag_type || !ttl_file) {
+    const errorMessage = "Missing or invalid parameters";
+    console.error(errorMessage);
+    return res.status(400).json({
+      error: errorMessage,
+      message: "web_id, antrag_type oder ttl_file nicht definiert!",
+    });
+  }
+
+  // Authentication check
+  if (!session.info.webId || !session.info.isLoggedIn) {
+    const errorMessage = "Unauthorized";
+    console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+    });
+  }
+
+  try {
+    const podname = extractPodname(WebID);
+    if (!podname) {
+      const errorMessage = "Ungültige WebID";
+      console.error(errorMessage);
+      return res.status(400).json({
+        error: errorMessage,
+        message: "Podname konnte aus WebID nicht gelesen werden.",
+      });
+    }
+
+    try {
+      await moveData(ttl_file, "");
+    } catch (error) {
+      console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
+
+      // Return error immediately for the first failed target
+      return res.status(500).json({
+        message: `Antrag konnte im KielCloak Pod gespeichert werden`,
+      }); 
+    }
+
+    console.log("Antrag erfolgreich gespeichert!");
+    return res.status(200).json({
+      message: "OK",
+    });
+  } catch (error) {
+    console.error("Unerwarteter Fehler in /antrag/new:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
+    });
+  }
+});
 
 // Exports for testing
 export { session, SessionLogin, createFile, moveData };

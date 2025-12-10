@@ -6,7 +6,7 @@
 /**
  * Handles Login for Backend service
  */
-async function SessionLogin() : Promise<void>
+export async function SessionLogin() : Promise<void>
 
 /**
  * Extrahiert Podname aus eine gegebene WebID
@@ -14,13 +14,15 @@ async function SessionLogin() : Promise<void>
  * 
  * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
  */
-function extractPodname(url: string): string
+export function extractPodname(url: string): string
 
 /**
  * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
  * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
- */
-async function createFile(sourceURL: string, podname : string) : Promise<string>
+ * @param target Empfänger Mailbox URL
+ * @param podname podname, der vor der Timestamp, die schon im Namen enthalten ist, im Dateinamen geschrieben werden soll.
+*/
+export async function createFile(sourceURL: string,target: string, podname: string) : Promise<string>
 
 /**
  * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
@@ -31,4 +33,4 @@ async function createFile(sourceURL: string, podname : string) : Promise<string>
  *  Bank : http://localhost:3000/bank/MailBox
  *  Uni : http://localhost:3000/uni/MailBox
  */
-async function moveData(file : File, targetUrl: string): Promise<void>
+export async function moveData(file : File, targetUrl: string): Promise<void>
