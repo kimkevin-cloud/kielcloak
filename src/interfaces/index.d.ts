@@ -9,32 +9,24 @@
 async function SessionLogin() : Promise<void>
 
 /**
- * Handles Logout for Backend Service
+ * Extrahiert Podname aus eine gegebene WebID
+ * @param url: WebID
  */
-async function SessionLogout() : Promise<void>
-
+function extractPodname(url: string): string
 
 /**
- * Function in charge of handling the writing to a third party (e.g. Uni / Bank)
- * @param sourceURL URL to where the information is located
- * @param destinationURL URL to where the information should be written (extern)
- */
-async function WriteToThirdParty(sourceURL : string, destinationURL : string) : void
-
-
-/**
- * Erstellt eine .ttl file mit Timestamp im Namen, wo die sourceURL der vom Studenten angegebenen Adresse steht.
+ * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
  * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
  */
-async function createTTL(sourceURL: string) : Promise<string>
+async function createFile(sourceURL: string, podname : string) : Promise<string>
 
 /**
  * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
- * @param sourceUrl Verweis Datenquelle (z.B. Adresse des Studenten in adress.ttl)
+ * @param file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
  * @param targetUrl Empfänger URL, wo die .ttl Datei geschrieben werden soll.
  * 
  * Test URLs: 
  *  Bank : http://localhost:3000/bank/MailBox
  *  Uni : http://localhost:3000/uni/MailBox
  */
-async function moveData(sourceUrl: string, targetUrl: string): Promise<void>
+async function moveData(file : File, targetUrl: string): Promise<void>

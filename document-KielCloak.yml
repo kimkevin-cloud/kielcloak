@@ -14,7 +14,7 @@ paths:
             schema:
               type: object
               properties:
-                adress_src_url:
+                address_src_url:
                   type: string
                   format: uri
                   description: URL zu "adress.ttl" im Studenten Pod
@@ -23,12 +23,14 @@ paths:
                   items: 
                     type: string
                   example: ["https://solid.valetudo.casa/uni/MailBox", "https://solid.valetudo.casa/bank/MailBox"]
-                timestamp:
-                  type: integer
-                  description: Unix timestamp in ms
+                web_id:
+                  type: string
+                  description: "WebId zum Solid Pod des Nutzers"
+                  example: "https://solid.valetudo.casa/stud/profile/card#me"
               required:
-                - url
-                - timestamp
+                - address_src_url
+                - target_src_urls
+                - web_id
       responses:
         "200":
           description: Address saved
@@ -52,20 +54,20 @@ paths:
             schema:
               type: object
               properties:
+                web_id:
+                  type: string
+                  description: "WebId zum Solid Pod des Nutzers"
+                  example: "https://solid.valetudo.casa/stud/profile/card#me"
                 antrag_type:
                   type: string
                   description: Art des Antrags
                   example: "begruessungsgeld"
-                timestamp:
-                  type: integer
-                  description: Unix timestamp in ms
                 ttl_file:
                   type: string
                   format: binary
                   description: antrags-TTL Datei
               required:
                 - antrag_type
-                - timestamp
                 - ttl_file
       responses:
         "200":
