@@ -4,8 +4,8 @@
   "description": " 'KielCloak' Backend für Anwendung",
   "main": "index.ts",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "cross-env NODE_ENV=test vitest run",
+    "test:watch": "cross-env NODE_ENV=test NODE_ENV=test vitest",
     "dev": "ts-node src/index.ts",
     "build": "webpack",
     "start": "webpack serve --open"
@@ -28,6 +28,7 @@
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "@vitest/ui": "^4.0.15",
+    "cross-env": "^10.1.0",
     "css-loader": "^7.1.2",
     "jsdom": "^27.2.0",
     "style-loader": "^4.0.0",
