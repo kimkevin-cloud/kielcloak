@@ -8,7 +8,7 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
-    "target": "ES2020",    // For nodejs:
+    "target": "ES2020", // For nodejs:
     // "lib": ["esnext"],
     "types": ["node"],
     // and npm install -D @types/node
@@ -33,8 +33,6 @@
     // Weitere Options für KielCloak Implementierung
     "allowJs": true, // Tells TypeScript to read JS files, as normally they are ignored as source files
 
-
-
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
@@ -43,11 +41,10 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build"]
 }
-
 
 // Error "no inputs were found in config file" lag daran, dass es noch kein index.file gab

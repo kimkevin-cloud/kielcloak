@@ -9,6 +9,7 @@ In diesem Repository wird das Backend (aka. KielCloak) der Anwendung implementie
 ## Benutzte Technologien
 
 Für die Imlementierung verwenden wir ( Muss noch festgestellt werden! )
-* Express Web Framework
-* Typescript als Programmiersprache
-* NodeJS als Laufzeitumgebung
+
+- Express Web Framework
+- Typescript als Programmiersprache
+- NodeJS als Laufzeitumgebung

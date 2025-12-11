@@ -22,6 +22,7 @@ app.get("/", (_: Request, res: Response) => {
   res.send("Backend running!");
 });
 
+// Initialisierung des Backends
 if (process.env.NODE_ENV != "test") {
   app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
@@ -29,6 +30,9 @@ if (process.env.NODE_ENV != "test") {
   });
 }
 
+/**
+ * Handles Login for Backend service
+ */
 async function SessionLogin() {
   const clientId = process.env.CLIENT_ID;
   const clientSecret = process.env.CLIENT_SECRET;
@@ -36,7 +40,7 @@ async function SessionLogin() {
 
   if (!clientId || !clientSecret || !oidcIssuer) {
     throw new Error(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
     );
   }
 
@@ -60,6 +64,9 @@ async function SessionLogin() {
   }
 }
 
+/**
+ * Handelt den Request aus dem Frontend, um die neue Adresse des Studentens in den Pods von den Dritten (aka. Uni oder Bank) zu speichern
+ */
 app.post("/save_address", async (req: Request, res: Response) => {
   const WebID = req.body.web_id;
   const sourceURL = req.body.sourceURL;
@@ -98,13 +105,12 @@ app.post("/save_address", async (req: Request, res: Response) => {
 
     const filename = sourceURL.split("/").pop(); // "adressenbestaetigung-1765307371.ttl"
     const newFilename = filename?.replace(/^([^-]+)-/, `$1_${podname}-`);
-    
+
     for (const element of targets) {
       try {
         const file = await createFile(sourceURL, newFilename, element);
         console.log(`Nächster Empfänger: ${element}`);
         await moveData(file, newFilename, element);
-
       } catch (error) {
         console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
 
@@ -128,13 +134,28 @@ app.post("/save_address", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Extrahiert Podname aus eine gegebene WebID
+ * @param url: WebID
+ *
+ * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
+ */
 function extractPodname(url: string): string {
   const match = url.match(/https?:\/\/[^/]+\/([^/]+)\/profile/);
   return match?.[1]?.toString() ?? "";
 }
 
-async function createFile(sourceURL: string, filename: string, targetURL: string): Promise<Blob> {
-
+/**
+ * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
+ * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
+ * @param filename Dateiname
+ * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
+ */
+async function createFile(
+  sourceURL: string,
+  filename: string,
+  targetURL: string,
+): Promise<Blob> {
   if (!filename.endsWith(".ttl")) {
     throw new Error("Dateiname muss mit .ttl enden!");
   }
@@ -152,6 +173,16 @@ async function createFile(sourceURL: string, filename: string, targetURL: string
   return blob;
 }
 
+/**
+ * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
+ * @param file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
+ * @param fileName Name der Datei
+ * @param targetURL Empfänger URL, wo die .ttl Datei geschrieben werden soll.
+ *
+ * Test URLs:
+ *  Bank : http://localhost:3000/bank/MailBox
+ *  Uni : http://localhost:3000/uni/MailBox
+ */
 async function moveData(file: Blob, fileName: string, targetURL: string) {
   if (!file || !targetURL || !fileName || targetURL === "" || fileName === "") {
     throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
@@ -175,11 +206,14 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
     console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`
+      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
     );
   }
 }
 
+/**
+ * Handelt das Speichern eines neuen Antrags im KielCloak Pod
+ */
 app.post("/antrag/new", async (req: Request, res: Response) => {
   const WebID = req.body.web_id;
   const antrag_type = req.body.antrag_type;
@@ -226,7 +260,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       // Return error immediately for the first failed target
       return res.status(500).json({
         message: `Antrag konnte im KielCloak Pod gespeichert werden`,
-      }); 
+      });
     }
 
     console.log("Antrag erfolgreich gespeichert!");

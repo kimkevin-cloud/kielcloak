@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  SessionLogin,
-  createFile,
-  moveData,
-  session,
-} from "../src/index";
+import { SessionLogin, createFile, moveData, session } from "../src/index";
 import { overwriteFile } from "@inrupt/solid-client";
 
 // Mock dependencies
@@ -98,7 +93,7 @@ describe("SessionLogin", () => {
     process.env.CLIENT_ID = undefined;
 
     await expect(SessionLogin()).rejects.toThrow(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
     );
   });
 });
@@ -124,7 +119,7 @@ describe("moveData", () => {
     vi.mock("@inrupt/solid-client", () => ({
       overwriteFile: vi.fn(),
     }));
-    
+
     const sourceURL = "https://example.com/data";
     const filename = "test.ttl";
     const targetURL = "https://pod.example.com/MailBox/";
@@ -141,27 +136,41 @@ describe("moveData", () => {
   });
 
   it("should throw error if file or targetURL is missing", async () => {
-    const file = await createFile("https://example.com/data", "test.ttl", "https://pod.example.com/MailBox/");
-    await expect(moveData(null as any, "test.ttl", "https://pod.example.com/MailBox/")).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!"
+    const file = await createFile(
+      "https://example.com/data",
+      "test.ttl",
+      "https://pod.example.com/MailBox/",
+    );
+    await expect(
+      moveData(null as any, "test.ttl", "https://pod.example.com/MailBox/"),
+    ).rejects.toThrow(
+      "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
     await expect(moveData(file, "", "")).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!"
+      "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
   });
 
   it("should throw error if file doesn't end with .ttl", async () => {
-    await expect(createFile("https://example.com/data", "test.txt", "https://pod.example.com/MailBox/")).rejects.toThrow(
-      "Dateiname muss mit .ttl enden!"
-    )
-  })
+    await expect(
+      createFile(
+        "https://example.com/data",
+        "test.txt",
+        "https://pod.example.com/MailBox/",
+      ),
+    ).rejects.toThrow("Dateiname muss mit .ttl enden!");
+  });
 
   it("should throw error if not logged in", async () => {
     session.info.webId = null;
-    const file = await createFile("https://example.com/data", "test.ttl", "https://pod.example.com/MailBox/");
-
-    await expect(moveData(file, "test.ttl", "https://pod.example.com/MailBox/")).rejects.toThrow(
-      "KielCloak nicht eingeloggt oder WebID fehlt."
+    const file = await createFile(
+      "https://example.com/data",
+      "test.ttl",
+      "https://pod.example.com/MailBox/",
     );
+
+    await expect(
+      moveData(file, "test.ttl", "https://pod.example.com/MailBox/"),
+    ).rejects.toThrow("KielCloak nicht eingeloggt oder WebID fehlt.");
   });
 });

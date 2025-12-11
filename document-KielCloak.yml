@@ -20,9 +20,13 @@ paths:
                   description: URL zu "adress.ttl" im Studenten Pod
                 target_src_urls:
                   type: array
-                  items: 
+                  items:
                     type: string
-                  example: ["https://solid.valetudo.casa/uni/MailBox", "https://solid.valetudo.casa/bank/MailBox"]
+                  example:
+                    [
+                      "https://solid.valetudo.casa/uni/MailBox",
+                      "https://solid.valetudo.casa/bank/MailBox",
+                    ]
                 web_id:
                   type: string
                   description: "WebId zum Solid Pod des Nutzers"
