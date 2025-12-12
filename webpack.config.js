@@ -1,12 +1,18 @@
 const path = require("path");
+const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
   mode: "development",
+  target: "node",
   entry: "./src/index.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "index.js",
+    clean: true,
   },
+  externalsPresets: { node: true },
+  // Do not bundle node_modules. Let Node resolve them at runtime.
+  externals: [nodeExternals()],
   module: {
     rules: [
       {
@@ -14,16 +20,10 @@ module.exports = {
         use: "ts-loader",
         exclude: /node_modules/,
       },
-      {
-        test: /\.css$/,
-        use: [{ loader: "style-loader" }, { loader: "css-loader" }],
-      },
     ],
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
   },
-  devServer: {
-    static: "./dist",
-  },
+  devtool: "source-map",
 };

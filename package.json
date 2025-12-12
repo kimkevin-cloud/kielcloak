@@ -10,7 +10,7 @@
     "build": "webpack",
     "start": "webpack serve --open",
     "format": "prettier --write .",
-    "lint": "prettier --check . && eslint . && svelte-check"
+    "lint": "prettier --check . && eslint ."
   },
   "keywords": [],
   "author": "",
@@ -26,29 +26,30 @@
     "express": "^5.1.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
     "@eslint/compat": "^1.4.0",
     "@eslint/js": "^9.36.0",
-    "eslint": "^9.36.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-svelte": "^3.12.4",
-    "typescript-eslint": "^8.44.1",
-    "prettier": "^3.6.2",
-    "prettier-plugin-svelte": "^3.4.0",
-    "prettier-plugin-tailwindcss": "^0.7.1",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
     "@vitest/ui": "^4.0.15",
     "cross-env": "^10.1.0",
     "css-loader": "^7.1.2",
+    "eslint": "^9.36.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.12.4",
     "jsdom": "^27.2.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "prettier-plugin-tailwindcss": "^0.7.1",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.44.1",
     "vitest": "^4.0.15",
     "webpack": "^5.103.0",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.2",
+    "webpack-node-externals": "^3.0.0"
   }
 }
