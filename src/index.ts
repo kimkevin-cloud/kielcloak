@@ -3,7 +3,7 @@
 
 import express from "express";
 import type { Request, Response } from "express";
-const { Session } = require("@inrupt/solid-client-authn-node");
+import { Session } from "@inrupt/solid-client-authn-node";
 import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
 import {
@@ -28,10 +28,17 @@ app.get("/", (_: Request, res: Response) => {
 });
 
 // Initialisierung des Backends
-if (process.env.NODE_ENV != "test") {
+async function startServer() {
+  await SessionLogin();
   app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
-    SessionLogin();
+  });
+}
+
+if (process.env.NODE_ENV !== "test") {
+  startServer().catch((err) => {
+    console.error("Failed to start server:", err);
+    process.exit(1);
   });
 }
 
@@ -53,7 +60,7 @@ async function SessionLogin() {
     clientId,
     clientSecret,
     oidcIssuer,
-    tokenType: "client_secret",
+    tokenType: "DPoP",
   });
 
   if (session.info.isLoggedIn) {
@@ -73,9 +80,9 @@ async function SessionLogin() {
  * Handelt den Request aus dem Frontend, um die neue Adresse des Studentens in den Pods von den Dritten (aka. Uni oder Bank) zu speichern
  */
 app.post("/save_address", async (req: Request, res: Response) => {
-  const WebID = req.body.web_id;
-  const sourceURL = req.body.sourceURL;
-  const targets = req.body.targets;
+  const WebID: string = req.body.web_id;
+  const sourceURL: string = req.body.sourceURL;
+  const targets: string[] = req.body.targets;
 
   // Input validation
   if (!WebID || !sourceURL || !targets || targets.length === 0) {
@@ -115,14 +122,17 @@ app.post("/save_address", async (req: Request, res: Response) => {
     for (const element of targets) {
       try {
         // Datei als Blob erstellen und absenden
-        const file = await createDritteFile(sourceURL, newFilename, element);
+        if (!filename || !newFilename) {
+          throw new Error("Dateiname konnte nicht geparsed werden");
+        }
+        const file = createDritteFile(sourceURL, newFilename, element);
         await moveData(file, newFilename, element);
       } catch (error) {
         // console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
 
         // Return error immediately for the first failed target
         return res.status(500).json({
-          message: `Adresse konnte nicht mit ${element} geteilt werden`,
+          message: `Adresse konnte nicht mit ${element} geteilt werden: ${error instanceof Error ? error : ''}`,
         });
       }
     }
@@ -135,7 +145,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
     // console.error("Unerwarteter Fehler in /save_address:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
+      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : '' }`,
     });
   }
 });
@@ -144,9 +154,9 @@ app.post("/save_address", async (req: Request, res: Response) => {
  * Handelt das Speichern eines neuen Antrags im KielCloak Pod
  */
 app.post("/antrag/new", async (req: Request, res: Response) => {
-  const WebID = req.body.web_id;
-  const antrag_type = req.body.antrag_type;
-  const ttl_file_base64 = req.body.ttl_file;
+  const WebID: string = req.body.web_id;
+  const antrag_type: string = req.body.antrag_type;
+  const ttl_file_base64: string = req.body.ttl_file;
 
   // Blob der TTL-Datei aus Base64 extrahieren
   const ttl_file = new Blob([Buffer.from(ttl_file_base64, "base64")]);
@@ -195,7 +205,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
 
     try {
       // Antrag und ACL dazu anlegen und absenden bzw. im eigenen Pod speichern
-      const aclFile = await createAntragACL(WebID, filename);
+      const aclFile = createAntragACL(WebID, filename);
       await moveData(
         ttl_file,
         filename,
@@ -211,7 +221,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
 
       // Fehler bei der Kommunikation mit KielCloak Pod
       return res.status(500).json({
-        message: `Antrag konnte im KielCloak Pod gespeichert werden`,
+        message: `Antrag konnte im KielCloak Pod gespeichert werden: ${error instanceof Error ? error : '' }`,
       });
     }
 
@@ -223,7 +233,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     // console.error("Unerwarteter Fehler in /antrag/new:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
+      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : '' }`,
     });
   }
 });
@@ -245,11 +255,11 @@ function extractPodname(url: string): string {
  * @param filename Dateiname
  * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
  */
-async function createDritteFile(
+function createDritteFile(
   sourceURL: string,
   filename: string,
   targetURL: string,
-): Promise<Blob> {
+): Blob {
   if (!filename.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
 
@@ -347,7 +357,7 @@ async function antragExists(fileName: string): Promise<boolean> {
  * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder
  *            KIELCLOAK_POD_URL nicht definiert ist
  */
-async function createAntragACL(webID: string, fileName: string): Promise<Blob> {
+function createAntragACL(webID: string, fileName: string): Blob {
   if (!fileName.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
 

@@ -1,6 +1,7 @@
 {
   "name": "kielcloak",
   "version": "1.0.0",
+  "type": "module",
   "description": " 'KielCloak' Backend für Anwendung",
   "main": "index.ts",
   "scripts": {
