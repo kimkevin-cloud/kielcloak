@@ -13,5 +13,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
 COPY --from=builder /app/dist ./dist
-EXPOSE 3000
-CMD ["node", "dist/index.js"]
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 8080
+CMD ["node", "dist/index.cjs"]
