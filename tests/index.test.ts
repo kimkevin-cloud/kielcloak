@@ -9,28 +9,30 @@ import {
 } from "../src/index";
 import * as solidClient from "@inrupt/solid-client";
 
-// Mock dependencies
-const mockSessionClass = vi.fn().mockImplementation(function () {
-  const login = vi.fn();
-  const logout = vi.fn();
-  const fetch = vi.fn();
-  const info = {
-    isLoggedIn: false,
-    webId: null,
-    sessionId: "12345",
-  };
+vi.mock("@inrupt/solid-client-authn-node", () => {
+  // Define the mock class INSIDE the factory so it's available when hoisted
+  const mockSessionClass = vi.fn().mockImplementation(function () {
+    const login = vi.fn();
+    const logout = vi.fn();
+    const fetch = vi.fn();
+    const info = {
+      isLoggedIn: false,
+      webId: null,
+      sessionId: "12345",
+    };
+    return {
+      login,
+      logout,
+      fetch,
+      info,
+    };
+  });
+
   return {
-    login,
-    logout,
-    fetch,
-    info,
+    getSessionFromStorage: vi.fn(),
+    Session: mockSessionClass,
   };
 });
-
-vi.mock("@inrupt/solid-client-authn-node", () => ({
-  getSessionFromStorage: vi.fn(),
-  Session: mockSessionClass,
-}));
 
 // Mock sessionStorage
 global.sessionStorage = {
@@ -56,6 +58,7 @@ vi.mock("@inrupt/solid-client", () => ({
   overwriteFile: vi.fn(),
   getSolidDataset: vi.fn(),
   getContainedResourceUrlAll: vi.fn(),
+  mockSolidDatasetFrom: vi.fn((url: string) => ({ url })),
 }));
 
 vi.mock("dotenv", () => ({
@@ -98,7 +101,7 @@ describe("SessionLogin", () => {
       clientId: "test-client-id",
       clientSecret: "test-client-secret",
       oidcIssuer: "https://test-issuer.com",
-      tokenType: "client_secret",
+      tokenType: "DPoP",
     });
   });
 
@@ -208,8 +211,12 @@ describe("moveData", () => {
       "https://pod.example.com/MailBox/",
     );
     await expect(
-      // todo
-      moveData(new Blob(), "test.ttl", "https://pod.example.com/MailBox/"),
+      // simulate missing file by passing undefined
+      moveData(
+        undefined as unknown as Blob,
+        "test.ttl",
+        "https://pod.example.com/MailBox/",
+      ),
     ).rejects.toThrow(
       "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
@@ -218,14 +225,14 @@ describe("moveData", () => {
     );
   });
 
-  it("should throw error if file doesn't end with .ttl", async () => {
-    await expect(
+  it("should throw error if file doesn't end with .ttl", () => {
+    expect(() =>
       createDritteFile(
         "https://example.com/data",
         "test.txt",
         "https://pod.example.com/MailBox/",
       ),
-    ).rejects.toThrow("Dateiname muss mit .ttl enden!");
+    ).toThrow("Dateiname muss mit .ttl enden!");
   });
 
   it("should throw error if not logged in", async () => {
