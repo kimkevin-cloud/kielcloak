@@ -6,7 +6,11 @@ import type { Request, Response } from "express";
 const { Session } = require("@inrupt/solid-client-authn-node");
 import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
-import { getContainedResourceUrlAll, getSolidDataset, overwriteFile } from "@inrupt/solid-client";
+import {
+  getContainedResourceUrlAll,
+  getSolidDataset,
+  overwriteFile,
+} from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 
 dotenv.config();
@@ -123,7 +127,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
       }
     }
 
-    // erfolgreiches Senden der Adresse an alle Dritten 
+    // erfolgreiches Senden der Adresse an alle Dritten
     return res.status(200).json({
       message: "OK",
     });
@@ -192,8 +196,16 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     try {
       // Antrag und ACL dazu anlegen und absenden bzw. im eigenen Pod speichern
       const aclFile = await createAntragACL(WebID, filename);
-      await moveData(ttl_file, filename, process.env.KIELCLOAK_POD_URL + "antraege/" || "");
-      await moveData(aclFile, filename + ".acl", process.env.KIELCLOAK_POD_URL + "antraege/" || "");
+      await moveData(
+        ttl_file,
+        filename,
+        process.env.KIELCLOAK_POD_URL + "antraege/" || "",
+      );
+      await moveData(
+        aclFile,
+        filename + ".acl",
+        process.env.KIELCLOAK_POD_URL + "antraege/" || "",
+      );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
 
@@ -238,7 +250,8 @@ async function createDritteFile(
   filename: string,
   targetURL: string,
 ): Promise<Blob> {
-  if (!filename.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+  if (!filename.endsWith(".ttl"))
+    throw new Error("Dateiname muss mit .ttl enden!");
 
   const content = `
 @prefix : <${targetURL}${filename}>.
@@ -268,7 +281,8 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
     throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
   }
   // Ohne Login oder WebID kein Zugriff auf den Pod möglich
-  if (!session.info.webId) throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
+  if (!session.info.webId)
+    throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
 
   try {
     await overwriteFile(targetURL + fileName, file, {
@@ -297,21 +311,27 @@ async function antragExists(fileName: string): Promise<boolean> {
   const podUrl = process.env.KIELCLOAK_POD_URL;
   if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
 
-  if (!session.info.webId || !session.info.isLoggedIn) throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
+  if (!session.info.webId || !session.info.isLoggedIn)
+    throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
 
   const containerUrl = new URL(podUrl + "antraege/").toString();
-  if(!fileName.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+  if (!fileName.endsWith(".ttl"))
+    throw new Error("Dateiname muss mit .ttl enden!");
 
   try {
     // Container-Metadaten laden
-		const antraegeDS = await getSolidDataset(containerUrl, { fetch: session.fetch	});
+    const antraegeDS = await getSolidDataset(containerUrl, {
+      fetch: session.fetch,
+    });
     const containedUrls = getContainedResourceUrlAll(antraegeDS);
 
     // Datei in den Container-URLs suchen -> letztes Element muss dem gesuchten Dateinamen entsprechen
     return containedUrls.some((url) => {
-      const foundFile = decodeURIComponent(new URL(url).pathname.split("/").pop() || "");
+      const foundFile = decodeURIComponent(
+        new URL(url).pathname.split("/").pop() || "",
+      );
       return foundFile === fileName;
-    })
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     // console.error("Fehler beim Laden der Container-Metadaten:", errorMessage);
@@ -328,7 +348,8 @@ async function antragExists(fileName: string): Promise<boolean> {
  *            KIELCLOAK_POD_URL nicht definiert ist
  */
 async function createAntragACL(webID: string, fileName: string): Promise<Blob> {
-  if (!fileName.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+  if (!fileName.endsWith(".ttl"))
+    throw new Error("Dateiname muss mit .ttl enden!");
 
   const podUrl = process.env.KIELCLOAK_POD_URL;
   if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
@@ -358,4 +379,11 @@ async function createAntragACL(webID: string, fileName: string): Promise<Blob> {
 }
 
 // Exports for testing
-export { session, SessionLogin, createDritteFile, moveData, createAntragACL, antragExists };
+export {
+  session,
+  SessionLogin,
+  createDritteFile,
+  moveData,
+  createAntragACL,
+  antragExists,
+};

@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from "vitest";
-import { SessionLogin, antragExists, createAntragACL, createDritteFile, moveData, session } from "../src/index";
+import {
+  SessionLogin,
+  antragExists,
+  createAntragACL,
+  createDritteFile,
+  moveData,
+  session,
+} from "../src/index";
 import * as solidClient from "@inrupt/solid-client";
 
 // Mock dependencies
@@ -184,10 +191,14 @@ describe("moveData", () => {
     expect(file).toBeInstanceOf(Blob);
     await moveData(file, filename, targetURL);
 
-    expect(solidClient.overwriteFile).toHaveBeenCalledWith(targetURL + filename, file, {
-      contentType: "text/turtle",
-      fetch: session.fetch,
-    });
+    expect(solidClient.overwriteFile).toHaveBeenCalledWith(
+      targetURL + filename,
+      file,
+      {
+        contentType: "text/turtle",
+        fetch: session.fetch,
+      },
+    );
   });
 
   it("should throw error if file or targetURL is missing", async () => {
@@ -274,7 +285,7 @@ describe("antragExists", () => {
 
     await expect(antragExists(fileName)).rejects.toThrow(
       "KielCloak nicht eingeloggt oder WebID fehlt.",
-    )
+    );
   });
 
   it("should throw error if KIELCLOAK_POD_URL is not defined", async () => {
@@ -286,7 +297,7 @@ describe("antragExists", () => {
 
     await expect(antragExists(fileName)).rejects.toThrow(
       "KIELCLOAK_POD_URL ist nicht definiert!",
-    )
+    );
   });
 
   it("should throw error if fileName does not end with .ttl", async () => {
@@ -297,7 +308,7 @@ describe("antragExists", () => {
 
     await expect(antragExists(fileName)).rejects.toThrow(
       "Dateiname muss mit .ttl enden!",
-    )
+    );
   });
 
   it("should throw error if there was a problem loading the container metadata", async () => {
@@ -310,6 +321,6 @@ describe("antragExists", () => {
 
     await expect(antragExists(fileName)).rejects.toThrow(
       "Container konnte nicht geladen werden: test",
-    )
+    );
   });
 });
