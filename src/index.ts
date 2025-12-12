@@ -132,7 +132,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
 
         // Return error immediately for the first failed target
         return res.status(500).json({
-          message: `Adresse konnte nicht mit ${element} geteilt werden: ${error instanceof Error ? error : ''}`,
+          message: `Adresse konnte nicht mit ${element} geteilt werden: ${error instanceof Error ? error : ""}`,
         });
       }
     }
@@ -145,7 +145,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
     // console.error("Unerwarteter Fehler in /save_address:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : '' }`,
+      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : ""}`,
     });
   }
 });
@@ -221,7 +221,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
 
       // Fehler bei der Kommunikation mit KielCloak Pod
       return res.status(500).json({
-        message: `Antrag konnte im KielCloak Pod gespeichert werden: ${error instanceof Error ? error : '' }`,
+        message: `Antrag konnte im KielCloak Pod gespeichert werden: ${error instanceof Error ? error : ""}`,
       });
     }
 
@@ -233,7 +233,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     // console.error("Unerwarteter Fehler in /antrag/new:", error);
     return res.status(500).json({
       error: "Internal server error",
-      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : '' }`,
+      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${error instanceof Error ? error : ""}`,
     });
   }
 });

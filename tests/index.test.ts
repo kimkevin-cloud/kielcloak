@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   SessionLogin,
   antragExists,
@@ -66,7 +66,7 @@ vi.mock("dotenv", () => ({
 
 // Mock process.env
 const originalEnv = process.env;
-beforeEach(async () => {
+beforeEach(() => {
   vi.resetModules();
 
   process.env = {
@@ -112,12 +112,12 @@ describe("SessionLogin", () => {
 });
 
 describe("createDritteFile", () => {
-  it("should create a TTL file with correct content", async () => {
+  it("should create a TTL file with correct content", () => {
     const sourceURL = "https://example.com/data";
     const filename = "test.ttl";
     const targetURL = "https://pod.example.com/MailBox/";
 
-    const result = await createDritteFile(sourceURL, filename, targetURL);
+    const result = createDritteFile(sourceURL, filename, targetURL);
 
     const content = `
 @prefix : <${targetURL}${filename}>.
@@ -137,14 +137,14 @@ describe("createDritteFile", () => {
 });
 
 describe("createAntragACL", () => {
-  it("should create an ACL file with correct content", async () => {
+  it("should create an ACL file with correct content", () => {
     // session WebID mocken
     session.info.webId = "https://kielcloak/profile/card#me";
 
     const webID = "https://test-user.com/profile/card#me";
     const fileName = "test.ttl";
 
-    const result = await createAntragACL(webID, fileName);
+    const result = createAntragACL(webID, fileName);
 
     const content = `
 @prefix acl: <https://www.w3.org/ns/auth/acl#>.
@@ -186,7 +186,7 @@ describe("moveData", () => {
     const filename = "test.ttl";
     const targetURL = "https://pod.example.com/MailBox/";
 
-    const file = await createDritteFile(sourceURL, filename, targetURL);
+    const file = createDritteFile(sourceURL, filename, targetURL);
 
     expect(file).toBeInstanceOf(Blob);
     await moveData(file, filename, targetURL);
@@ -202,13 +202,14 @@ describe("moveData", () => {
   });
 
   it("should throw error if file or targetURL is missing", async () => {
-    const file = await createDritteFile(
+    const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
       "https://pod.example.com/MailBox/",
     );
     await expect(
-      moveData(null as any, "test.ttl", "https://pod.example.com/MailBox/"),
+      // todo
+      moveData(new Blob(), "test.ttl", "https://pod.example.com/MailBox/"),
     ).rejects.toThrow(
       "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
@@ -228,8 +229,8 @@ describe("moveData", () => {
   });
 
   it("should throw error if not logged in", async () => {
-    session.info.webId = null;
-    const file = await createDritteFile(
+    session.info.webId = "";
+    const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
       "https://pod.example.com/MailBox/",
@@ -248,7 +249,9 @@ describe("antragExists", () => {
 
     const fileName = "test.ttl";
 
-    vi.mocked(solidClient.getSolidDataset).mockResolvedValue({} as any);
+    vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
+      solidClient.mockSolidDatasetFrom("https://example.com"),
+    );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
       `${process.env.KIELCLOAK_POD_URL}antraege/${fileName}`,
@@ -265,7 +268,9 @@ describe("antragExists", () => {
 
     const fileName = "test.ttl";
 
-    vi.mocked(solidClient.getSolidDataset).mockResolvedValue({} as any);
+    vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
+      solidClient.mockSolidDatasetFrom("https://example.com"),
+    );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
       `${process.env.KIELCLOAK_POD_URL}antraege/andere_datei.txt`,
@@ -277,10 +282,10 @@ describe("antragExists", () => {
   });
 
   it("should throw error if not logged in", async () => {
-    session.info.webId = null;
+    session.info.webId = "";
     session.info.isLoggedIn = false;
 
-    const webID = "https://test-user.com/profile/card#me";
+    // const webID = "https://test-user.com/profile/card#me";
     const fileName = "test.ttl";
 
     await expect(antragExists(fileName)).rejects.toThrow(
