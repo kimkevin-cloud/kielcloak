@@ -76,7 +76,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
   // Input validation
   if (!WebID || !sourceURL || !targets || targets.length === 0) {
     const errorMessage = "Missing or invalid parameters";
-    console.error(errorMessage);
+    // console.error(errorMessage);
     return res.status(400).json({
       error: errorMessage,
       message: "web_id, sourceURL, and non-empty targets array are required",
@@ -86,7 +86,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
     const errorMessage = "Unauthorized";
-    console.error(errorMessage);
+    // console.error(errorMessage);
     return res.status(401).json({
       error: errorMessage,
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
@@ -97,23 +97,24 @@ app.post("/save_address", async (req: Request, res: Response) => {
     const podname = extractPodname(WebID);
     if (!podname) {
       const errorMessage = "Ungültige WebID";
-      console.error(errorMessage);
+      // console.error(errorMessage);
       return res.status(400).json({
         error: errorMessage,
         message: "Podname konnte aus WebID gelesen werden",
       });
     }
 
+    // podname aus WebID an Dateinamen anhängen
     const filename = sourceURL.split("/").pop(); // "adressenbestaetigung-1765307371.ttl"
     const newFilename = filename?.replace(/^([^-]+)-/, `$1_${podname}-`);
 
     for (const element of targets) {
       try {
+        // Datei als Blob erstellen und absenden
         const file = await createDritteFile(sourceURL, newFilename, element);
-        console.log(`Nächster Empfänger: ${element}`);
         await moveData(file, newFilename, element);
       } catch (error) {
-        console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
+        // console.error(`Fehler bei der Kommunikation mit ${element}:`, error);
 
         // Return error immediately for the first failed target
         return res.status(500).json({
@@ -122,12 +123,12 @@ app.post("/save_address", async (req: Request, res: Response) => {
       }
     }
 
-    console.log("Kommunikation mit allen Dritten erfolgreich!!");
+    // erfolgreiches Senden der Adresse an alle Dritten 
     return res.status(200).json({
       message: "OK",
     });
   } catch (error) {
-    console.error("Unerwarteter Fehler in /save_address:", error);
+    // console.error("Unerwarteter Fehler in /save_address:", error);
     return res.status(500).json({
       error: "Internal server error",
       message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
@@ -149,7 +150,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   // Input validation
   if (!WebID || !antrag_type || !ttl_file) {
     const errorMessage = "Missing or invalid parameters";
-    console.error(errorMessage);
+    // console.error(errorMessage);
     return res.status(400).json({
       error: errorMessage,
       message: "web_id, antrag_type oder ttl_file nicht definiert!",
@@ -159,7 +160,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
     const errorMessage = "Unauthorized";
-    console.error(errorMessage);
+    // console.error(errorMessage);
     return res.status(401).json({
       error: errorMessage,
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
@@ -170,7 +171,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     const podname = extractPodname(WebID);
     if (!podname) {
       const errorMessage = "Ungültige WebID";
-      console.error(errorMessage);
+      // console.error(errorMessage);
       return res.status(400).json({
         error: errorMessage,
         message: "Podname konnte aus WebID nicht gelesen werden.",
@@ -181,7 +182,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     // Antrag darf noch nicht existieren
     if (await antragExists(filename)) {
       const errorMessage = "Antrag existiert bereits";
-      console.error(errorMessage);
+      // console.error(errorMessage);
       return res.status(400).json({
         error: errorMessage,
         message: "Antrag existiert bereits",
@@ -189,25 +190,25 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     }
 
     try {
-      // Antrag und ACL dazu anlegen
+      // Antrag und ACL dazu anlegen und absenden bzw. im eigenen Pod speichern
       const aclFile = await createAntragACL(WebID, filename);
       await moveData(ttl_file, filename, process.env.KIELCLOAK_POD_URL + "antraege/" || "");
       await moveData(aclFile, filename + ".acl", process.env.KIELCLOAK_POD_URL + "antraege/" || "");
     } catch (error) {
-      console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
+      // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
 
-      // Return error immediately for the first failed target
+      // Fehler bei der Kommunikation mit KielCloak Pod
       return res.status(500).json({
         message: `Antrag konnte im KielCloak Pod gespeichert werden`,
       });
     }
 
-    console.log("Antrag erfolgreich gespeichert!");
+    // erfolgreiches Senden des Antrags
     return res.status(200).json({
       message: "OK",
     });
   } catch (error) {
-    console.error("Unerwarteter Fehler in /antrag/new:", error);
+    // console.error("Unerwarteter Fehler in /antrag/new:", error);
     return res.status(500).json({
       error: "Internal server error",
       message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
@@ -269,18 +270,15 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
   // Ohne Login oder WebID kein Zugriff auf den Pod möglich
   if (!session.info.webId) throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
 
-  console.log(`Daten werden an ${targetURL} geschickt`);
-
   try {
     await overwriteFile(targetURL + fileName, file, {
       contentType: "text/turtle",
       fetch: session.fetch,
     });
 
-    console.log(`Daten in ${targetURL} erfolgreich gespeichert!`);
     return;
   } catch (error) {
-    console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
+    // console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
       `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
@@ -309,13 +307,14 @@ async function antragExists(fileName: string): Promise<boolean> {
 		const antraegeDS = await getSolidDataset(containerUrl, { fetch: session.fetch	});
     const containedUrls = getContainedResourceUrlAll(antraegeDS);
 
+    // Datei in den Container-URLs suchen -> letztes Element muss dem gesuchten Dateinamen entsprechen
     return containedUrls.some((url) => {
       const foundFile = decodeURIComponent(new URL(url).pathname.split("/").pop() || "");
       return foundFile === fileName;
     })
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Fehler beim Laden der Container-Metadaten:", errorMessage);
+    // console.error("Fehler beim Laden der Container-Metadaten:", errorMessage);
     throw new Error("Container konnte nicht geladen werden: " + errorMessage);
   }
 }
@@ -334,6 +333,8 @@ async function createAntragACL(webID: string, fileName: string): Promise<Blob> {
   const podUrl = process.env.KIELCLOAK_POD_URL;
   if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
 
+  // ACL Inhalt erstellen
+  // Nutzer kann lesen, Kielcloak kann lesen und schreiben
   const content = `
 @prefix acl: <https://www.w3.org/ns/auth/acl#>.
 
