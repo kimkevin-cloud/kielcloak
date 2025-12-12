@@ -6,7 +6,8 @@ import type { Request, Response } from "express";
 const { Session } = require("@inrupt/solid-client-authn-node");
 import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
-import { overwriteFile } from "@inrupt/solid-client";
+import { getContainedResourceUrlAll, getSolidDataset, overwriteFile } from "@inrupt/solid-client";
+import { Buffer } from "buffer";
 
 dotenv.config();
 
@@ -108,7 +109,7 @@ app.post("/save_address", async (req: Request, res: Response) => {
 
     for (const element of targets) {
       try {
-        const file = await createFile(sourceURL, newFilename, element);
+        const file = await createDritteFile(sourceURL, newFilename, element);
         console.log(`Nächster Empfänger: ${element}`);
         await moveData(file, newFilename, element);
       } catch (error) {
@@ -135,89 +136,15 @@ app.post("/save_address", async (req: Request, res: Response) => {
 });
 
 /**
- * Extrahiert Podname aus eine gegebene WebID
- * @param url: WebID
- *
- * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
- */
-function extractPodname(url: string): string {
-  const match = url.match(/https?:\/\/[^/]+\/([^/]+)\/profile/);
-  return match?.[1]?.toString() ?? "";
-}
-
-/**
- * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
- * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
- * @param filename Dateiname
- * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
- */
-async function createFile(
-  sourceURL: string,
-  filename: string,
-  targetURL: string,
-): Promise<Blob> {
-  if (!filename.endsWith(".ttl")) {
-    throw new Error("Dateiname muss mit .ttl enden!");
-  }
-
-  const content = `
-@prefix : <${targetURL}${filename}>.
-@prefix owl: <http://www.w3.org/2002/07/owl#>.
-
-:adressdata
-  owl:sameAs <${sourceURL}>.
-  `.trim();
-
-  const blob = new Blob([content], { type: "text/turtle" });
-
-  return blob;
-}
-
-/**
- * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
- * @param file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
- * @param fileName Name der Datei
- * @param targetURL Empfänger URL, wo die .ttl Datei geschrieben werden soll.
- *
- * Test URLs:
- *  Bank : http://localhost:3000/bank/MailBox
- *  Uni : http://localhost:3000/uni/MailBox
- */
-async function moveData(file: Blob, fileName: string, targetURL: string) {
-  if (!file || !targetURL || !fileName || targetURL === "" || fileName === "") {
-    throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
-  }
-  // Ohne Login oder WebID kein Zugriff auf den Pod möglich
-  if (!session.info.webId) {
-    throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
-  }
-
-  console.log(`Daten werden an ${targetURL} geschickt`);
-
-  try {
-    await overwriteFile(targetURL + fileName, file, {
-      contentType: "text/turtle",
-      fetch: session.fetch,
-    });
-
-    console.log(`Daten in ${targetURL} erfolgreich gespeichert!`);
-    return;
-  } catch (error) {
-    console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
-    );
-  }
-}
-
-/**
  * Handelt das Speichern eines neuen Antrags im KielCloak Pod
  */
 app.post("/antrag/new", async (req: Request, res: Response) => {
   const WebID = req.body.web_id;
   const antrag_type = req.body.antrag_type;
-  const ttl_file = req.body.ttl_file;
+  const ttl_file_base64 = req.body.ttl_file;
+
+  // Blob der TTL-Datei aus Base64 extrahieren
+  const ttl_file = new Blob([Buffer.from(ttl_file_base64, "base64")]);
 
   // Input validation
   if (!WebID || !antrag_type || !ttl_file) {
@@ -251,9 +178,21 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     }
 
     const filename = `antrag_${antrag_type}_${podname}.ttl`;
+    // Antrag darf noch nicht existieren
+    if (await antragExists(filename)) {
+      const errorMessage = "Antrag existiert bereits";
+      console.error(errorMessage);
+      return res.status(400).json({
+        error: errorMessage,
+        message: "Antrag existiert bereits",
+      });
+    }
 
     try {
-      await moveData(ttl_file, filename, process.env.KIELCLOAK_POD_URL || "");
+      // Antrag und ACL dazu anlegen
+      const aclFile = await createAntragACL(WebID, filename);
+      await moveData(ttl_file, filename, process.env.KIELCLOAK_POD_URL + "antraege/" || "");
+      await moveData(aclFile, filename + ".acl", process.env.KIELCLOAK_POD_URL + "antraege/" || "");
     } catch (error) {
       console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
 
@@ -276,5 +215,146 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Extrahiert Podname aus eine gegebene WebID
+ * @param url: WebID
+ *
+ * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
+ */
+function extractPodname(url: string): string {
+  const match = url.match(/https?:\/\/[^/]+\/([^/]+)\/profile/);
+  return match?.[1]?.toString() ?? "";
+}
+
+/**
+ * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
+ * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
+ * @param filename Dateiname
+ * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
+ */
+async function createDritteFile(
+  sourceURL: string,
+  filename: string,
+  targetURL: string,
+): Promise<Blob> {
+  if (!filename.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+
+  const content = `
+@prefix : <${targetURL}${filename}>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+:adressdata
+  owl:sameAs <${sourceURL}>.
+  `.trim();
+
+  const blob = new Blob([content], { type: "text/turtle" });
+
+  return blob;
+}
+
+/**
+ * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
+ * @param file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
+ * @param fileName Name der Datei
+ * @param targetURL Empfänger URL, wo die .ttl Datei geschrieben werden soll.
+ *
+ * Test URLs:
+ *  Bank : http://localhost:3000/bank/MailBox
+ *  Uni : http://localhost:3000/uni/MailBox
+ */
+async function moveData(file: Blob, fileName: string, targetURL: string) {
+  if (!file || !targetURL || !fileName || targetURL === "" || fileName === "") {
+    throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
+  }
+  // Ohne Login oder WebID kein Zugriff auf den Pod möglich
+  if (!session.info.webId) throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
+
+  console.log(`Daten werden an ${targetURL} geschickt`);
+
+  try {
+    await overwriteFile(targetURL + fileName, file, {
+      contentType: "text/turtle",
+      fetch: session.fetch,
+    });
+
+    console.log(`Daten in ${targetURL} erfolgreich gespeichert!`);
+    return;
+  } catch (error) {
+    console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
+    );
+  }
+}
+
+/**
+ * Überprüft, ob ein bestimmter Antrag im KielCloak Pod existiert
+ * @param fileName Name der Antags-Datei, die im KielCloak Pod gesucht wird
+ * @returns Ein Promise, das den Boolean-Wert true zurückgibt, wenn die Datei existiert
+ * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder
+ *            KIELCLOAK_POD_URL nicht definiert ist
+ */
+async function antragExists(fileName: string): Promise<boolean> {
+  const podUrl = process.env.KIELCLOAK_POD_URL;
+  if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
+
+  if (!session.info.webId || !session.info.isLoggedIn) throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
+
+  const containerUrl = new URL(podUrl + "antraege/").toString();
+  if(!fileName.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+
+  try {
+    // Container-Metadaten laden
+		const antraegeDS = await getSolidDataset(containerUrl, { fetch: session.fetch	});
+    const containedUrls = getContainedResourceUrlAll(antraegeDS);
+
+    return containedUrls.some((url) => {
+      const foundFile = decodeURIComponent(new URL(url).pathname.split("/").pop() || "");
+      return foundFile === fileName;
+    })
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Fehler beim Laden der Container-Metadaten:", errorMessage);
+    throw new Error("Container konnte nicht geladen werden: " + errorMessage);
+  }
+}
+
+/**
+ * Erstellt ein ACL (Access Control List) Blob zum Antrag, mit den Berechtigungen für Kielcloak und Nutzer.
+ * @param webID WebID des Nutzers, der den Antrag erstellt hat
+ * @param fileName Dateiname des Antrags
+ * @returns Ein Blob mit dem Inhalt der ACL
+ * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder
+ *            KIELCLOAK_POD_URL nicht definiert ist
+ */
+async function createAntragACL(webID: string, fileName: string): Promise<Blob> {
+  if (!fileName.endsWith(".ttl")) throw new Error("Dateiname muss mit .ttl enden!");
+
+  const podUrl = process.env.KIELCLOAK_POD_URL;
+  if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
+
+  const content = `
+@prefix acl: <https://www.w3.org/ns/auth/acl#>.
+
+<#owner>
+  a acl:Authorization;
+  acl:agent <${session.info.webId}>;
+  acl:accessTo <${podUrl}antraege/${fileName}>;
+  acl:default <./>;
+  acl:mode 
+    acl:Write, acl:Control, acl:Read.
+
+<#${webID}>
+  a acl:Authorization;
+  acl:agent <${webID}>;
+  acl:accessTo <${podUrl}antraege/${fileName}>;
+  acl:mode acl:Read.
+`.trim();
+
+  const blob = new Blob([content], { type: "text/turtle" });
+  return blob;
+}
+
 // Exports for testing
-export { session, SessionLogin, createFile, moveData };
+export { session, SessionLogin, createDritteFile, moveData, createAntragACL, antragExists };

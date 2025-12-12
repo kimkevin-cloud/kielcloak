@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { SessionLogin, createFile, moveData, session } from "../src/index";
-import { overwriteFile } from "@inrupt/solid-client";
+import { describe, it, expect, vi, beforeEach, afterEach, Mock } from "vitest";
+import { SessionLogin, antragExists, createAntragACL, createDritteFile, moveData, session } from "../src/index";
+import * as solidClient from "@inrupt/solid-client";
 
 // Mock dependencies
 const mockSessionClass = vi.fn().mockImplementation(function () {
@@ -47,6 +47,8 @@ vi.mock("fs", () => ({
 vi.mock("@inrupt/solid-client", () => ({
   deleteFile: vi.fn(),
   overwriteFile: vi.fn(),
+  getSolidDataset: vi.fn(),
+  getContainedResourceUrlAll: vi.fn(),
 }));
 
 vi.mock("dotenv", () => ({
@@ -57,18 +59,22 @@ vi.mock("dotenv", () => ({
 
 // Mock process.env
 const originalEnv = process.env;
-beforeEach(() => {
+beforeEach(async () => {
+  vi.resetModules();
+
   process.env = {
     ...originalEnv,
     CLIENT_ID: "test-client-id",
     CLIENT_SECRET: "test-client-secret",
     OIDC_ISSUER: "https://test-issuer.com",
+    KIELCLOAK_POD_URL: "https://test-pod.com/",
   };
 });
 
 afterEach(() => {
   process.env = originalEnv;
   vi.clearAllMocks();
+  vi.resetModules();
 });
 
 describe("SessionLogin", () => {
@@ -98,14 +104,63 @@ describe("SessionLogin", () => {
   });
 });
 
-describe("createFile", () => {
+describe("createDritteFile", () => {
   it("should create a TTL file with correct content", async () => {
     const sourceURL = "https://example.com/data";
     const filename = "test.ttl";
     const targetURL = "https://pod.example.com/MailBox/";
 
-    const result = await createFile(sourceURL, filename, targetURL);
+    const result = await createDritteFile(sourceURL, filename, targetURL);
 
+    const content = `
+@prefix : <${targetURL}${filename}>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+:adressdata
+  owl:sameAs <${sourceURL}>.
+  `.trim();
+
+    const blob = new Blob([content], { type: "text/turtle" });
+
+    expect(result).not.toBeNull();
+    expect(result).toEqual(blob);
+    expect(result).toBeInstanceOf(Blob);
+    expect(result.type).toBe("text/turtle");
+  });
+});
+
+describe("createAntragACL", () => {
+  it("should create an ACL file with correct content", async () => {
+    // session WebID mocken
+    session.info.webId = "https://kielcloak/profile/card#me";
+
+    const webID = "https://test-user.com/profile/card#me";
+    const fileName = "test.ttl";
+
+    const result = await createAntragACL(webID, fileName);
+
+    const content = `
+@prefix acl: <https://www.w3.org/ns/auth/acl#>.
+
+<#owner>
+  a acl:Authorization;
+  acl:agent <${session.info.webId}>;
+  acl:accessTo <${process.env.KIELCLOAK_POD_URL}antraege/${fileName}>;
+  acl:default <./>;
+  acl:mode 
+    acl:Write, acl:Control, acl:Read.
+
+<#${webID}>
+  a acl:Authorization;
+  acl:agent <${webID}>;
+  acl:accessTo <${process.env.KIELCLOAK_POD_URL}antraege/${fileName}>;
+  acl:mode acl:Read.
+`.trim();
+
+    const blob = new Blob([content], { type: "text/turtle" });
+
+    expect(result).not.toBeNull();
+    expect(result).toEqual(blob);
     expect(result).toBeInstanceOf(Blob);
     expect(result.type).toBe("text/turtle");
   });
@@ -113,30 +168,30 @@ describe("createFile", () => {
 
 describe("moveData", () => {
   it("should move data successfully", async () => {
-    session.info.webId = "https://test-user.com/profile/card#me";
+    session.info.webId = "https://kielcloak/profile/card#me";
     session.fetch = vi.fn();
 
-    vi.mock("@inrupt/solid-client", () => ({
-      overwriteFile: vi.fn(),
-    }));
+    // vi.mock("@inrupt/solid-client", () => ({
+    //   overwriteFile: vi.fn(),
+    // }));
 
     const sourceURL = "https://example.com/data";
     const filename = "test.ttl";
     const targetURL = "https://pod.example.com/MailBox/";
 
-    const file = await createFile(sourceURL, filename, targetURL);
+    const file = await createDritteFile(sourceURL, filename, targetURL);
 
     expect(file).toBeInstanceOf(Blob);
     await moveData(file, filename, targetURL);
 
-    expect(overwriteFile).toHaveBeenCalledWith(targetURL + filename, file, {
+    expect(solidClient.overwriteFile).toHaveBeenCalledWith(targetURL + filename, file, {
       contentType: "text/turtle",
       fetch: session.fetch,
     });
   });
 
   it("should throw error if file or targetURL is missing", async () => {
-    const file = await createFile(
+    const file = await createDritteFile(
       "https://example.com/data",
       "test.ttl",
       "https://pod.example.com/MailBox/",
@@ -153,7 +208,7 @@ describe("moveData", () => {
 
   it("should throw error if file doesn't end with .ttl", async () => {
     await expect(
-      createFile(
+      createDritteFile(
         "https://example.com/data",
         "test.txt",
         "https://pod.example.com/MailBox/",
@@ -163,7 +218,7 @@ describe("moveData", () => {
 
   it("should throw error if not logged in", async () => {
     session.info.webId = null;
-    const file = await createFile(
+    const file = await createDritteFile(
       "https://example.com/data",
       "test.ttl",
       "https://pod.example.com/MailBox/",
@@ -172,5 +227,89 @@ describe("moveData", () => {
     await expect(
       moveData(file, "test.ttl", "https://pod.example.com/MailBox/"),
     ).rejects.toThrow("KielCloak nicht eingeloggt oder WebID fehlt.");
+  });
+});
+
+describe("antragExists", () => {
+  it("should return true if antrag exists", async () => {
+    session.info.webId = "https://kielcloak/profile/card#me";
+    session.info.isLoggedIn = true;
+
+    const fileName = "test.ttl";
+
+    vi.mocked(solidClient.getSolidDataset).mockResolvedValue({} as any);
+
+    vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
+      `${process.env.KIELCLOAK_POD_URL}antraege/${fileName}`,
+    ]);
+
+    const result = await antragExists(fileName);
+
+    expect(result).toBe(true);
+  });
+
+  it("should return false if antrag does not exist", async () => {
+    session.info.webId = "https://kielcloak/profile/card#me";
+    session.info.isLoggedIn = true;
+
+    const fileName = "test.ttl";
+
+    vi.mocked(solidClient.getSolidDataset).mockResolvedValue({} as any);
+
+    vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
+      `${process.env.KIELCLOAK_POD_URL}antraege/andere_datei.txt`,
+    ]);
+
+    const result = await antragExists(fileName);
+
+    expect(result).toBe(false);
+  });
+
+  it("should throw error if not logged in", async () => {
+    session.info.webId = null;
+    session.info.isLoggedIn = false;
+
+    const webID = "https://test-user.com/profile/card#me";
+    const fileName = "test.ttl";
+
+    await expect(antragExists(fileName)).rejects.toThrow(
+      "KielCloak nicht eingeloggt oder WebID fehlt.",
+    )
+  });
+
+  it("should throw error if KIELCLOAK_POD_URL is not defined", async () => {
+    session.info.webId = "https://kielcloak/profile/card#me";
+    session.info.isLoggedIn = true;
+    process.env.KIELCLOAK_POD_URL = undefined;
+
+    const fileName = "test.ttl";
+
+    await expect(antragExists(fileName)).rejects.toThrow(
+      "KIELCLOAK_POD_URL ist nicht definiert!",
+    )
+  });
+
+  it("should throw error if fileName does not end with .ttl", async () => {
+    session.info.webId = "https://kielcloak/profile/card#me";
+    session.info.isLoggedIn = true;
+
+    const fileName = "test.txt";
+
+    await expect(antragExists(fileName)).rejects.toThrow(
+      "Dateiname muss mit .ttl enden!",
+    )
+  });
+
+  it("should throw error if there was a problem loading the container metadata", async () => {
+    session.info.webId = "https://kielcloak/profile/card#me";
+    session.info.isLoggedIn = true;
+
+    const fileName = "test.ttl";
+
+    vi.mocked(solidClient.getSolidDataset).mockRejectedValue(new Error("test"));
+
+    await expect(antragExists(fileName)).rejects.toThrow(
+      "Container konnte nicht geladen werden: test",
+    )
   });
 });
