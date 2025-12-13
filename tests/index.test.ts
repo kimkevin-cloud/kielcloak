@@ -6,7 +6,7 @@ import {
   createDritteFile,
   moveData,
   session,
-} from "../src/index";
+} from "../src/index.ts";
 import * as solidClient from "@inrupt/solid-client";
 
 vi.mock("@inrupt/solid-client-authn-node", () => {

@@ -302,7 +302,7 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
 
     return;
   } catch (error) {
-    // console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
+    console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
       `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,

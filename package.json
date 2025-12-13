@@ -7,7 +7,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test vitest run",
     "test:watch": "cross-env NODE_ENV=test NODE_ENV=test vitest",
-    "dev": "ts-node src/index.ts",
+    "dev": "node --loader ts-node/esm src/index.ts",
     "build": "webpack",
     "start": "webpack serve --open",
     "format": "prettier --write .",
