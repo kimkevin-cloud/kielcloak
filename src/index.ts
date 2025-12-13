@@ -79,7 +79,7 @@ async function SessionLogin() {
 /**
  * Handelt den Request aus dem Frontend, um die neue Adresse des Studentens in den Pods von den Dritten (aka. Uni oder Bank) zu speichern
  */
-app.post("/save_address", async (req: Request, res: Response) => {
+app.post("/send_address", async (req: Request, res: Response) => {
   const WebID: string = req.body.web_id;
   const sourceURL: string = req.body.sourceURL;
   const targets: string[] = req.body.targets;
