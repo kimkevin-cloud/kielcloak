@@ -1,0 +1,53 @@
+stages:
+  - mergereq_lint_test_build
+  - deploy
+
+lint:
+  stage: mergereq_lint_test_build
+  image: node:22
+  script:
+    - npm ci
+    - npm run lint
+  only:
+    - merge_requests
+  allow_failure: false
+
+test:
+  stage: mergereq_lint_test_build
+  image: node:22
+  script:
+    - npm ci
+    - npm run test
+  only:
+    - merge_requests
+  allow_failure: false
+
+docker-build-check:
+  stage: mergereq_lint_test_build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t dummy-image .
+  only:
+    - merge_requests
+
+docker-build:
+  stage: deploy
+  image: docker:24.0.7
+  services:
+    - name: docker:dind
+      command: ["--experimental"]
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker buildx create --use --name builder
+    - docker buildx inspect builder --bootstrap
+  script: |
+    docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --push \
+          -t $CI_REGISTRY_IMAGE:latest \
+          .
+
+  only:
+    - main
