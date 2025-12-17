@@ -28,8 +28,23 @@ app.get("/", (_: Request, res: Response) => {
 });
 
 // Initialisierung des Backends
+async function ensureLoginWithRetry(intervalMs: number = 5000): Promise<void> {
+  // Infinite retry loop until SessionLogin succeeds
+  for (;;) {
+    try {
+      await SessionLogin();
+      if (session.info.isLoggedIn) return;
+      console.warn("Session login unsuccessful, retrying...");
+    } catch (err) {
+      console.error("Failed to login:", err);
+    }
+    console.log(`Retrying login in ${intervalMs / 1000}s...`);
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
 async function startServer() {
-  await SessionLogin();
+  await ensureLoginWithRetry();
   app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
   });
