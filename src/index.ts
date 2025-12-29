@@ -28,8 +28,23 @@ app.get("/", (_: Request, res: Response) => {
 });
 
 // Initialisierung des Backends
+async function ensureLoginWithRetry(intervalMs: number = 5000): Promise<void> {
+  // Infinite retry loop until SessionLogin succeeds
+  for (;;) {
+    try {
+      await SessionLogin();
+      if (session.info.isLoggedIn) return;
+      console.warn("Session login unsuccessful, retrying...");
+    } catch (err) {
+      console.error("Failed to login:", err);
+    }
+    console.log(`Retrying login in ${intervalMs / 1000}s...`);
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
 async function startServer() {
-  await SessionLogin();
+  await ensureLoginWithRetry();
   app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
   });
@@ -59,7 +74,7 @@ async function SessionLogin() {
   await session.login({
     clientId,
     clientSecret,
-    oidcIssuer,
+    oidcIssuer: new URL(oidcIssuer).toString(),
     tokenType: "DPoP",
   });
 
@@ -180,8 +195,10 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
-
   try {
+    const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
+    const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
+
     const podname = extractPodname(WebID);
     if (!podname) {
       const errorMessage = "Ungültige WebID";
@@ -206,15 +223,11 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     try {
       // Antrag und ACL dazu anlegen und absenden bzw. im eigenen Pod speichern
       const aclFile = createAntragACL(WebID, filename);
-      await moveData(
-        ttl_file,
-        filename,
-        process.env.KIELCLOAK_POD_URL + "antraege/" || "",
-      );
+      await moveData(ttl_file, filename, podUrlSanitized + "antraege/" || "");
       await moveData(
         aclFile,
         filename + ".acl",
-        process.env.KIELCLOAK_POD_URL + "antraege/" || "",
+        podUrlSanitized + "antraege/" || "",
       );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
@@ -321,10 +334,15 @@ async function antragExists(fileName: string): Promise<boolean> {
   const podUrl = process.env.KIELCLOAK_POD_URL;
   if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
 
+  const podUrlParsed = new URL(podUrl).toString();
+  const podUrlSanitized = podUrlParsed.endsWith("/")
+    ? podUrlParsed
+    : podUrlParsed + "/";
+
   if (!session.info.webId || !session.info.isLoggedIn)
     throw new Error("KielCloak nicht eingeloggt oder WebID fehlt.");
 
-  const containerUrl = new URL(podUrl + "antraege/").toString();
+  const containerUrl = new URL(podUrlSanitized + "antraege/").toString();
   if (!fileName.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
 
@@ -364,6 +382,11 @@ function createAntragACL(webID: string, fileName: string): Blob {
   const podUrl = process.env.KIELCLOAK_POD_URL;
   if (!podUrl) throw new Error("KIELCLOAK_POD_URL ist nicht definiert!");
 
+  const podUrlParsed = new URL(podUrl).toString();
+  const podUrlSanitized = podUrlParsed.endsWith("/")
+    ? podUrlParsed
+    : podUrlParsed + "/";
+
   // ACL Inhalt erstellen
   // Nutzer kann lesen, Kielcloak kann lesen und schreiben
   const content = `
@@ -372,7 +395,7 @@ function createAntragACL(webID: string, fileName: string): Blob {
 <#owner>
   a acl:Authorization;
   acl:agent <${session.info.webId}>;
-  acl:accessTo <${podUrl}antraege/${fileName}>;
+  acl:accessTo <${podUrlSanitized}antraege/${fileName}>;
   acl:default <./>;
   acl:mode 
     acl:Write, acl:Control, acl:Read.
@@ -380,7 +403,7 @@ function createAntragACL(webID: string, fileName: string): Blob {
 <#${webID}>
   a acl:Authorization;
   acl:agent <${webID}>;
-  acl:accessTo <${podUrl}antraege/${fileName}>;
+  acl:accessTo <${podUrlSanitized}antraege/${fileName}>;
   acl:mode acl:Read.
 `.trim();
 
