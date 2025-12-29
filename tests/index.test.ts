@@ -100,7 +100,7 @@ describe("SessionLogin", () => {
     expect(session.login).toHaveBeenCalledWith({
       clientId: "test-client-id",
       clientSecret: "test-client-secret",
-      oidcIssuer: "https://test-issuer.com",
+      oidcIssuer: "https://test-issuer.com/",
       tokenType: "DPoP",
     });
   });
@@ -146,6 +146,7 @@ describe("createAntragACL", () => {
 
     const webID = "https://test-user.com/profile/card#me";
     const fileName = "test.ttl";
+    const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!).toString();
 
     const result = createAntragACL(webID, fileName);
 
@@ -155,7 +156,7 @@ describe("createAntragACL", () => {
 <#owner>
   a acl:Authorization;
   acl:agent <${session.info.webId}>;
-  acl:accessTo <${process.env.KIELCLOAK_POD_URL}antraege/${fileName}>;
+  acl:accessTo <${podUrlParsed}antraege/${fileName}>;
   acl:default <./>;
   acl:mode 
     acl:Write, acl:Control, acl:Read.
@@ -163,7 +164,7 @@ describe("createAntragACL", () => {
 <#${webID}>
   a acl:Authorization;
   acl:agent <${webID}>;
-  acl:accessTo <${process.env.KIELCLOAK_POD_URL}antraege/${fileName}>;
+  acl:accessTo <${podUrlParsed}antraege/${fileName}>;
   acl:mode acl:Read.
 `.trim();
 
@@ -255,13 +256,14 @@ describe("antragExists", () => {
     session.info.isLoggedIn = true;
 
     const fileName = "test.ttl";
+    const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
       solidClient.mockSolidDatasetFrom("https://example.com"),
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
-      `${process.env.KIELCLOAK_POD_URL}antraege/${fileName}`,
+      `${podUrlParsed}antraege/${fileName}`,
     ]);
 
     const result = await antragExists(fileName);
@@ -274,13 +276,14 @@ describe("antragExists", () => {
     session.info.isLoggedIn = true;
 
     const fileName = "test.ttl";
+    const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
       solidClient.mockSolidDatasetFrom("https://example.com"),
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
-      `${process.env.KIELCLOAK_POD_URL}antraege/andere_datei.txt`,
+      `${podUrlParsed}antraege/andere_datei.txt`,
     ]);
 
     const result = await antragExists(fileName);
