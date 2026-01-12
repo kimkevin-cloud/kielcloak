@@ -10,6 +10,7 @@ import {
   getContainedResourceUrlAll,
   getSolidDataset,
   overwriteFile,
+  UrlString
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 
@@ -154,6 +155,9 @@ app.post("/send_address", async (req: Request, res: Response) => {
 
     // erfolgreiches Senden der Adresse an alle Dritten
     return res.status(200).json({
+      forms: {
+
+      },
       message: "OK",
     });
   } catch (error) {
@@ -410,6 +414,80 @@ function createAntragACL(webID: string, fileName: string): Blob {
   const blob = new Blob([content], { type: "text/turtle" });
   return blob;
 }
+
+async function getAllForms(podname : string ) : Promise<UrlString[]> {
+  try {
+    const URL = `${process.env.KIELCLOAK_POD_URL}/${podname}/`
+    console.log("URL: ", URL);
+    // Retrieves a List of URLs to all Resources in the container
+    const solidDataSet = await getSolidDataset(URL || "");
+    const containedUrls = getContainedResourceUrlAll(solidDataSet);
+    console.log(containedUrls);
+    /**
+    * PROBLEM MIT BERECHTIGUNG
+    **/
+    return containedUrls;
+  } catch (error) {
+    console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
+    return [];
+  }
+}
+
+/**
+ * Gibt alle Anträge des Nutzers zurück 
+ */
+app.get("/antrag/all", async (req: Request, res: Response) => {
+  const WebID = req.query.web_id?.toString();
+
+  // Input validation
+  if (!WebID) {
+    const errorMessage = "Missing or invalid WebID";
+    console.error(errorMessage);
+    return res.status(400).json({
+      error: errorMessage,
+      message: "web_id nicht definiert!",
+    });
+  }
+  console.log("WebID: ", WebID);
+
+  // Authentication check
+  if (!session.info.webId || !session.info.isLoggedIn) {
+    const errorMessage = "Unauthorized";
+    console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+    });
+  }
+  console.log("Backend logged in!");
+
+  const podname = extractPodname(WebID);
+  if (!podname) {
+    const errorMessage = "Ungültige WebID";
+    console.error(errorMessage);
+    return res.status(400).json({
+      error: errorMessage,
+      message: "Podname konnte aus WebID nicht gelesen werden.",
+    });
+  }
+  console.log("Podname: ", podname);
+
+  try {
+    const UserForms = await getAllForms(podname);
+
+    console.log("Anträge gefunden!");
+    return res.status(200).json({
+      UserForms,
+      message: "OK",
+    });
+  } catch (error) {
+    console.error("Unerwarteter Fehler in /antrag/all:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
+    });
+  }
+});
 
 // Exports for testing
 export {
