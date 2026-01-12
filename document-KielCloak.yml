@@ -86,3 +86,39 @@ paths:
                     example: "ok"
         "400":
           description: Invalid input
+  /antrag/all:
+    get:
+      summary: Gibt alle Anträge des Nutzers zurück
+      parameters:
+        - name: web_id
+          in: query
+          required: true
+          description: WebId zum Solid Pod des Nutzers
+          schema:
+            type: string
+            example: https://solid.valetudo.casa/stud/profile/card#me
+      responses:
+        "200":
+          description: JSON mit Anträgen des Nutzers (timestamp und antrag-type)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        antragType:
+                          type: string
+                          example: begruessungsgeld
+                        timestamp:
+                          type: integer
+                          format: int64
+                          example: 1768143644
+                  status:
+                    type: string
+                    example: ok
+        "400":
+          description: "Nutzer nicht gefunden"
