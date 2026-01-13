@@ -13,6 +13,7 @@ import {
   UrlString
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
+import { UserForms } from "./types";
 
 dotenv.config();
 
@@ -473,13 +474,20 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   console.log("Podname: ", podname);
 
   try {
-    const UserForms = await getAllForms(podname);
-
+    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`
+    console.log("URL: ", URL);
+    // Retrieves a List of URLs to all Resources in the container
+    const solidDataSet = await getSolidDataset(URL || "");
+    const containedUrls = getContainedResourceUrlAll(solidDataSet);
+    console.log(containedUrls);
+   
+    /**
+    * PROBLEM MIT BERECHTIGUNG
+    **/
+    const forms = formatForms(containedUrls);
     console.log("Anträge gefunden!");
-    return res.status(200).json({
-      UserForms,
-      message: "OK",
-    });
+    return res.status(200).json({forms});
+
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);
     return res.status(500).json({
@@ -488,6 +496,21 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
+ * @param urls Liste alles URLs, die man transformieren muss.
+ * @returns JSON Objekt der Art 
+ * {
+ *  forms {
+ *    "antrag_type": string,
+ *     "timestamp": string
+ *  }[]
+ * }
+*/
+function formatForms(urls : string[]) /* : Promise<UserForms> */ {
+ // Impl.
+}
 
 // Exports for testing
 export {
