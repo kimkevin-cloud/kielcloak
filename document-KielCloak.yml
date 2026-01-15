@@ -126,3 +126,52 @@ paths:
                     example: ok
         "400":
           description: "Nutzer nicht gefunden"
+  /send_webid:
+    post:
+      summary: Meldung der WebId des Studenten
+      description: Meldung der WebId des Studenten Pods an KielCloak und damit dann an den Vermieter-Pod (KielCloak leitet die WebId weiter)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                web_id:
+                  type: string
+                  description: "WebId zum Solid Pod des Studenten"
+                  example: "https://solid.valetudo.casa/stud/profile/card#me"
+                given_name:
+                  type: string
+                  description: "Vorname des Studenten"
+                  example: "Petra"
+                family_name:
+                  type: string
+                  description: "Nachname des Studenten"
+                  example: "Plietsch"
+                full_name:
+                  type: string
+                  description: "Voller Name des Studenten"
+                  example: "Petra Clara Plietsch"
+                target_web_id:
+                  type: string
+                  description: "WebId des Vermieter Pods"
+                  example: "https://solid.valetudo.casa/lord/profile/card#me"
+              required:
+                - web_id
+                - given_name
+                - family_name
+                - target_web_id
+      responses:
+        "200":
+          description: Address saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        "400":
+          description: Invalid input
