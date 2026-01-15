@@ -439,6 +439,7 @@ async function getAllForms(podname : string ) : Promise<UrlString[]> {
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
   const WebID = req.query.web_id?.toString();
+  console.log("WebID: ", WebID);
 
   // Input validation
   if (!WebID) {
@@ -449,7 +450,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       message: "web_id nicht definiert!",
     });
   }
-  console.log("WebID: ", WebID);
+  
 
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
@@ -480,7 +481,6 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const solidDataSet = await getSolidDataset(URL || "");
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log(containedUrls);
-   
     /**
     * PROBLEM MIT BERECHTIGUNG
     **/
