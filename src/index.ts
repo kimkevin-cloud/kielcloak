@@ -69,7 +69,7 @@ async function SessionLogin() {
 
   if (!clientId || !clientSecret || !oidcIssuer) {
     throw new Error(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
     );
   }
 
@@ -234,7 +234,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       await moveData(
         aclFile,
         filename + ".acl",
-        podUrlSanitized + "antraege/" || "",
+        podUrlSanitized + "antraege/" || ""
       );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
@@ -278,7 +278,7 @@ function extractPodname(url: string): string {
 function createDritteFile(
   sourceURL: string,
   filename: string,
-  targetURL: string,
+  targetURL: string
 ): Blob {
   if (!filename.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
@@ -325,7 +325,7 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
     console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
+      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`
     );
   }
 }
@@ -363,7 +363,7 @@ async function antragExists(fileName: string): Promise<boolean> {
     // Datei in den Container-URLs suchen -> letztes Element muss dem gesuchten Dateinamen entsprechen
     return containedUrls.some((url) => {
       const foundFile = decodeURIComponent(
-        new URL(url).pathname.split("/").pop() || "",
+        new URL(url).pathname.split("/").pop() || ""
       );
       return foundFile === fileName;
     });
@@ -484,3 +484,111 @@ export {
   createAntragACL,
   antragExists,
 };
+
+app.post("/send_webid", async (req: Request, res: Response) => {
+  const tenantWebId: string = req.body.tenantWebId;
+  const givenName: string = req.body.givenName;
+  const familyName: string = req.body.familyName;
+  const fullName: string = req.body.fullName;
+  const landlordWebId: string = req.body.landlordWebId;
+
+  if (
+    !tenantWebId ||
+    !givenName ||
+    !familyName ||
+    !fullName ||
+    !landlordWebId
+  ) {
+    return res.status(400).json({
+      error: "Missing or invalid parameters",
+      message:
+        "tenantWebId, givenName, familyName, fullName und landlordWebId sind erforderlich.",
+    });
+  }
+
+  if (!session.info.webId || !session.info.isLoggedIn) {
+    return res.status(401).json({
+      error: "Unauthorized",
+      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+    });
+  }
+
+  try {
+    const mailboxUrl = landlordMailboxFromWebId(landlordWebId);
+    const filename = buildAnfrageFilename(fullName, tenantWebId);
+    const ttlFile = createTenantWebIdFile({
+      tenantWebId,
+      givenName,
+      familyName,
+      fullName: fullName,
+    });
+
+    await moveData(ttlFile, filename, mailboxUrl);
+
+    return res.status(201).json({
+      message: "OK",
+      target: mailboxUrl,
+      filename,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Internal server error",
+      message: `Ein unerwarteter Fehler ist im Prozess aufgetreten: ${
+        error instanceof Error ? error.message : ""
+      }`,
+    });
+  }
+});
+
+function landlordMailboxFromWebId(landlordWebId: string): string {
+  if (!landlordWebId.includes("/profile/card#me")) {
+    throw new Error("Ungültige Vermieter WebID");
+  }
+  return landlordWebId.replace("/profile/card#me", "/MailBox/");
+}
+
+function createTenantWebIdFile(params: {
+  tenantWebId: string;
+  givenName: string;
+  familyName: string;
+  fullName: string;
+}): Blob {
+  const esc = (v: string) =>
+    v
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/\r/g, "\\r")
+      .replace(/\n/g, "\\n");
+
+  const content = `@prefix schema: <https://schema.org/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+<#tenant>
+    a schema:Person;
+    foaf:givenName "${esc(params.givenName)}";
+    foaf:familyName "${esc(params.familyName)}";
+    schema:name "${esc(params.fullName)}";
+    schema:identifier <${params.tenantWebId}>.
+`;
+
+  return new Blob([content], { type: "text/turtle" });
+}
+
+function sanitizeForFilename(input: string): string {
+  return (
+    input
+      .trim()
+      .replace(/^https?:\/\//, (m) => (m === "https://" ? "https-" : "http-"))
+      .replace(/[\s\/:?#&]+/g, "-")
+      // Wie Umlaute behandeln?
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+  );
+}
+
+function buildAnfrageFilename(tenantName: string, tenantWebId: string): string {
+  return `anfrage_${sanitizeForFilename(tenantName)}_${sanitizeForFilename(
+    tenantWebId
+  )}.ttl`;
+}
