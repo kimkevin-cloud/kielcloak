@@ -465,6 +465,72 @@ async function listDirecotries(
     return [];
   }
 }
+
+/**
+ * Gibt alle Anträge des Nutzers zurück 
+ */
+app.get("/antrag/all", async (req: Request, res: Response) => {
+  const WebID = req.query.web_id?.toString();
+  console.log("WebID: ", WebID);
+
+  // Input validation
+  if (!WebID) {
+    const errorMessage = "Missing or invalid WebID";
+    console.error(errorMessage);
+    return res.status(400).json({
+      error: errorMessage,
+      message: "web_id nicht definiert!",
+    });
+  }
+  
+
+  // Authentication check
+  if (!session.info.webId || !session.info.isLoggedIn) {
+    const errorMessage = "Unauthorized";
+    console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+    });
+  }
+  console.log("Backend logged in!");
+
+  const podname = extractPodname(WebID);
+  if (!podname) {
+    const errorMessage = "Ungültige WebID";
+    console.error(errorMessage);
+    return res.status(400).json({
+      error: errorMessage,
+      message: "Podname konnte aus WebID nicht gelesen werden.",
+    });
+  }
+  console.log("Podname: ", podname);
+
+  try {
+    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`
+    console.log("URL: ", URL);
+    // Retrieves a List of URLs to all Resources in the container
+    const solidDataSet = await getSolidDataset(URL || "", {
+      fetch: session.fetch,
+    });
+    const containedUrls = getContainedResourceUrlAll(solidDataSet);
+    console.log(containedUrls);
+    /**
+    * PROBLEM MIT BERECHTIGUNG
+    **/
+    const forms = formatForms(containedUrls);
+    console.log("Anträge gefunden!");
+    return res.status(200).json({forms});
+
+  } catch (error) {
+    console.error("Unerwarteter Fehler in /antrag/all:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
+    });
+  }
+});
+
 /**
  * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
  * @param urls Liste alles URLs, die man transformieren muss.
