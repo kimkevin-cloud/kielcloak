@@ -22,6 +22,20 @@ test:
     - merge_requests
   allow_failure: false
 
+integration_test:
+  stage: mergereq_lint_test_build
+  image: node:22
+  variables:
+    CI_DEBUG_SERVICES: "true"
+    DEBUG: testcontainers*
+  services:
+    - docker:dind
+  script:
+    - npm ci
+    - npm run test:integration
+  only:
+    - merge_requests
+
 docker-build-check:
   stage: mergereq_lint_test_build
   image: docker:latest
