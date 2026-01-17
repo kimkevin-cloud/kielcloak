@@ -1,0 +1,18 @@
+@prefix : <http://localhost:3000/stud/MailBox/adressenbestaetigung-1765749435695.ttl#>.
+@prefix schema: <http://schema.org/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+:confirmation
+  a schema:Thing;
+  schema:name "Adressbestätigung"^^xsd:string;
+  schema:datePublished "2025-12-14T21:57:15.695Z"^^xsd:dateTime;
+  owl:sameAs <http://localhost:3000/lord/addresses/musterstrasse1#address>.
+
+:addressData
+  a schema:PostalAddress;
+  schema:streetAddress "Musterstraße 1"^^xsd:string;
+  schema:addressLocality "Kiel"^^xsd:string;
+  schema:postalCode "24103"^^xsd:string;
+  schema:addressCountry "DE"^^xsd:string;
+  schema:identifier "MG-2025-0456"^^xsd:string.
