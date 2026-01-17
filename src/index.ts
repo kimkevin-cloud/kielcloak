@@ -12,10 +12,8 @@ import {
   getSolidDataset,
   isContainer,
   overwriteFile,
-  UrlString,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
-import { UserForms } from "./types";
 
 dotenv.config();
 
@@ -424,18 +422,21 @@ function createAntragACL(webID: string, fileName: string): Blob {
  * Gibt alle Anträge des Nutzers zurück
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
-  const WebID = req.query.web_id?.toString();
-  console.log("WebID: ", WebID);
+  let WebID: string; // = req.query.webid;
 
   // Input validation
-  if (!WebID) {
+  if (typeof req.query.webid != "string" || !req.query.webid) {
     const errorMessage = "Missing or invalid WebID";
     console.error(errorMessage);
     return res.status(400).json({
       error: errorMessage,
       message: "web_id nicht definiert!",
     });
+  } else {
+    WebID = req.query.webid;
   }
+
+  console.log("WebID: ", WebID);
 
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
@@ -537,6 +538,7 @@ async function listDirecotries(
  *  }[]
  * }
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function formatForms(urls: string[]) /* : Promise<UserForms> */ {
   // Impl.
 }
