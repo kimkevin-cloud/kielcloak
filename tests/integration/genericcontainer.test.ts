@@ -47,7 +47,9 @@ beforeAll(async () => {
 
     console.log(`Using solid-data from: ${solidDataDir}`);
 
-    solidContainer = await new GenericContainer("armsolid")
+    solidContainer = await new GenericContainer(
+      "solidproject/community-server:latest",
+    )
       .withCommand([
         "-c",
         "config/file.json",
@@ -65,7 +67,7 @@ beforeAll(async () => {
       .withExposedPorts(8080)
       .withWaitStrategy(Wait.forHttp("/", 3000))
       .withStartupTimeout(120_000)
-      // .withPlatform("linux/amd64")
+      .withPlatform("linux/amd64")
       .start();
 
     const solidHost = solidContainer.getHost();
@@ -82,13 +84,26 @@ beforeAll(async () => {
         OIDC_ISSUER: envVars.OIDC_ISSUER,
       })
       .withNetworkMode(`container:${solidContainer.getId()}`)
-      // .withWaitStrategy(Wait.forHttp("/"))
       .start();
 
-    // Im Host-Modus ist der Port direkt 8080
     const port = solidContainer.getMappedPort(8080);
     const host = solidContainer.getHost();
     baseURL = `http://${host}:${port}`;
+
+    // Workaround: backendContainer waitStrategy geht nicht da es das solidContainer netzwerk nutzt,
+    // aber der Solid Container kann nur auf den eigenen Port warten (da das Backend erst danach gestartet wird)
+    // daher hier manuell auf den backendContainer Port 8080 (über den solidContainer) warten
+    while (true) {
+      try {
+        const response = await fetch(baseURL);
+        if (response.ok) {
+          break;
+        }
+      } catch {
+        // Fehler ist zu erwarten (kielcloak muss erst starten), ignorieren
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
 
     console.log(`Backend container started at ${baseURL}`);
   } catch (error) {
@@ -106,29 +121,15 @@ afterAll(async () => {
   }
 });
 
-describe("both containers start", () => {
-  it("builds and starts successfully", async () => {
+describe("Kielcloak API is healthy", () => {
+  it("has authenticated with CSS and responds with status 200", async () => {
     expect(solidContainer).toBeDefined();
     expect(solidContainer.getId()).toBeTruthy();
 
     expect(backendContainer).toBeDefined();
     expect(backendContainer.getId()).toBeTruthy();
 
-    // GET root to check if api is alive
-    while (true) {
-      try {
-        const response = await fetch(baseURL);
-        if (response.ok) {
-          break;
-        }
-      } catch (e) {
-        console.log("Waiting for container to be ready...");
-        if (e instanceof Error) {
-          console.log(e);
-        }
-        // Errors are expected if the container is not yet ready, so we ignore them.
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    const response = await fetch(baseURL);
+    expect(response.status).toBe(200);
   });
 });
