@@ -464,7 +464,9 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
     console.log("URL: ", URL);
     // Retrieves a List of URLs to all Resources in the container
-    const solidDataSet = await getSolidDataset(URL || "");
+    const solidDataSet = await getSolidDataset(URL || "", {
+      fetch: session.fetch,
+    });
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log(containedUrls);
     /**
