@@ -8,9 +8,11 @@ import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
 import {
   getContainedResourceUrlAll,
+  getResourceInfo,
   getSolidDataset,
+  isContainer,
   overwriteFile,
-  UrlString
+  UrlString,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 import { UserForms } from "./types";
@@ -156,9 +158,7 @@ app.post("/send_address", async (req: Request, res: Response) => {
 
     // erfolgreiches Senden der Adresse an alle Dritten
     return res.status(200).json({
-      forms: {
-
-      },
+      forms: {},
       message: "OK",
     });
   } catch (error) {
@@ -200,21 +200,25 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
+
   try {
     const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
     const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
-
-    const podname = extractPodname(WebID);
-    if (!podname) {
-      const errorMessage = "Ungültige WebID";
-      // console.error(errorMessage);
-      return res.status(400).json({
-        error: errorMessage,
-        message: "Podname konnte aus WebID nicht gelesen werden.",
-      });
+    const podname = btoa(WebID);
+    if (antrag_type === "begruessungsgeld") {
+      const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
+      for (const entry of entries) {
+        if (entry.url.includes(`${antrag_type}_${podname}`)) {
+          return res.status(418).json({
+            error: "Antrag konnte nicht erstellt werden",
+            message: "Antrag für Begrssungsgeld existiert bereits",
+          });
+        }
+      }
     }
 
-    const filename = `antrag_${antrag_type}_${podname}.ttl`;
+    const timestamp = Date.now();
+    const filename = `antrag_${antrag_type}_${podname}_${timestamp}.ttl`;
     // Antrag darf noch nicht existieren
     if (await antragExists(filename)) {
       const errorMessage = "Antrag existiert bereits";
@@ -416,26 +420,8 @@ function createAntragACL(webID: string, fileName: string): Blob {
   return blob;
 }
 
-async function getAllForms(podname : string ) : Promise<UrlString[]> {
-  try {
-    const URL = `${process.env.KIELCLOAK_POD_URL}/${podname}/`
-    console.log("URL: ", URL);
-    // Retrieves a List of URLs to all Resources in the container
-    const solidDataSet = await getSolidDataset(URL || "");
-    const containedUrls = getContainedResourceUrlAll(solidDataSet);
-    console.log(containedUrls);
-    /**
-    * PROBLEM MIT BERECHTIGUNG
-    **/
-    return containedUrls;
-  } catch (error) {
-    console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
-    return [];
-  }
-}
-
 /**
- * Gibt alle Anträge des Nutzers zurück 
+ * Gibt alle Anträge des Nutzers zurück
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
   const WebID = req.query.web_id?.toString();
@@ -450,7 +436,6 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       message: "web_id nicht definiert!",
     });
   }
-  
 
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
@@ -475,19 +460,18 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   console.log("Podname: ", podname);
 
   try {
-    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`
+    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
     console.log("URL: ", URL);
     // Retrieves a List of URLs to all Resources in the container
     const solidDataSet = await getSolidDataset(URL || "");
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log(containedUrls);
     /**
-    * PROBLEM MIT BERECHTIGUNG
-    **/
+     * PROBLEM MIT BERECHTIGUNG
+     **/
     const forms = formatForms(containedUrls);
     console.log("Anträge gefunden!");
-    return res.status(200).json({forms});
-
+    return res.status(200).json({ forms });
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);
     return res.status(500).json({
@@ -497,19 +481,64 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   }
 });
 
+async function listDirecotries(
+  URL: string,
+): Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>> {
+  // Ohne Login oder WebID kein Zugriff auf den Pod möglich
+  if (!session.info.webId) {
+    console.warn(
+      "Nicht eingeloggt oder WebID fehlt – schreibe keine Testdaten.",
+    );
+    return [];
+  }
+
+  try {
+    // Container-Metadaten laden
+    const ds = await getSolidDataset(URL, {
+      fetch: session.fetch,
+    });
+    const containedUrls = getContainedResourceUrlAll(ds);
+
+    // Für jeden enthaltenen Resource eine HEAD-Abfrage, um Typ/Container zu ermitteln
+    const entries = await Promise.all(
+      containedUrls.map(async (url) => {
+        try {
+          const info = await getResourceInfo(url, {
+            fetch: session.fetch,
+          });
+          const container = Boolean(isContainer(info));
+          if (container) {
+            return { url, isContainer: true, contentType: "container" };
+          }
+          const ct = info.internal_resourceInfo.contentType;
+          return ct
+            ? { url, isContainer: false, contentType: ct }
+            : { url, isContainer: false };
+        } catch {
+          // Fallback: Heuristik über Slash am Ende (Container enden i. d. R. mit '/')
+          return { url, isContainer: url.endsWith("/") };
+        }
+      }),
+    );
+    return entries;
+  } catch (e) {
+    console.error("Fehler beim Auflisten des Containers:", e);
+    return [];
+  }
+}
 /**
  * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
  * @param urls Liste alles URLs, die man transformieren muss.
- * @returns JSON Objekt der Art 
+ * @returns JSON Objekt der Art
  * {
  *  forms {
  *    "antrag_type": string,
  *     "timestamp": string
  *  }[]
  * }
-*/
-function formatForms(urls : string[]) /* : Promise<UserForms> */ {
- // Impl.
+ */
+function formatForms(urls: string[]) /* : Promise<UserForms> */ {
+  // Impl.
 }
 
 // Exports for testing
