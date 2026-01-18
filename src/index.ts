@@ -249,7 +249,6 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
   const WebID = req.query.web_id?.toString();
-  console.log("WebID: ", WebID);
 
   // Input validation
   if (!WebID) {
@@ -261,6 +260,10 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     });
   }
   
+  // WebID muss laut Absprache zu base64 codiert werden
+  console.log("nicht codierte WebID: ", WebID);
+  const encodedWebID = Buffer.from(WebID, 'utf-8').toString('base64');
+  console.log("base64 WebID: ", encodedWebID);
 
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
@@ -283,7 +286,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log("Contained URLs: ", containedUrls);
     // Formatiert forms zu einem UserForms object
-    const forms = formatForms(containedUrls, WebID);
+    const forms = formatForms(containedUrls, encodedWebID);
 
     // mockUserForms zum Testen !!!
     console.log("Formatierte Anträge: ", mockUserForms);
