@@ -1,0 +1,13 @@
+@prefix : http://example.org/application .
+@prefix dcterms: http://purl.org/dc/terms/ .
+@prefix schema: http://schema.org/.
+@prefix xsd: http://www.w3.org/2001/XMLSchema .
+
+:application
+  dcterms:title "begruessungsgeld" ;
+  dcterms:issued "2025-12-14T21:57:15.695Z"^^xsd:dateTime .
+
+:person
+  a schema:Person;
+  schema:name "Petra Plietsch"^^xsd:string ;
+  schema:accountid <http://localhost:3000/stud/profile/card#me> .
