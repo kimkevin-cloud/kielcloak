@@ -67,7 +67,7 @@ async function SessionLogin() {
 
   if (!clientId || !clientSecret || !oidcIssuer) {
     throw new Error(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
     );
   }
 
@@ -227,7 +227,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       await moveData(
         aclFile,
         filename + ".acl",
-        podUrlSanitized + "antraege/" || "",
+        podUrlSanitized + "antraege/" || ""
       );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
@@ -271,7 +271,7 @@ function extractPodname(url: string): string {
 function createDritteFile(
   sourceURL: string,
   filename: string,
-  targetURL: string,
+  targetURL: string
 ): Blob {
   if (!filename.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
@@ -318,7 +318,7 @@ async function moveData(file: Blob, fileName: string, targetURL: string) {
     console.error(`Fehler beim Speichern der Datei in ${targetURL}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`,
+      `Datei konnte nicht in Target ${targetURL} gespeichert werden: ${errorMessage}`
     );
   }
 }
@@ -356,7 +356,7 @@ async function antragExists(fileName: string): Promise<boolean> {
     // Datei in den Container-URLs suchen -> letztes Element muss dem gesuchten Dateinamen entsprechen
     return containedUrls.some((url) => {
       const foundFile = decodeURIComponent(
-        new URL(url).pathname.split("/").pop() || "",
+        new URL(url).pathname.split("/").pop() || ""
       );
       return foundFile === fileName;
     });
@@ -505,7 +505,7 @@ function createTenantWebIdFile(params: {
     foaf:givenName "${esc(params.givenName)}";
     foaf:familyName "${esc(params.familyName)}";
     schema:name "${esc(params.fullName)}";
-    schema:identifier <${params.tenantWebId}>.
+    schema:identifier "${esc(params.tenantWebId)}".
 `;
 
   return new Blob([content], { type: "text/turtle" });
@@ -525,7 +525,6 @@ function sanitizeForFilename(input: string): string {
 }
 
 function buildAnfrageFilename(tenantName: string, tenantWebId: string): string {
-  return `anfrage_${sanitizeForFilename(tenantName)}_${sanitizeForFilename(
-    tenantWebId,
-  )}.ttl`;
+  const tenantWebIdBase64 = Buffer.from(tenantWebId, "utf8").toString("base64");
+  return `anfrage_${sanitizeForFilename(tenantName)}_${tenantWebIdBase64}.ttl`;
 }
