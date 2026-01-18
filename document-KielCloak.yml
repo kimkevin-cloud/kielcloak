@@ -101,27 +101,28 @@ paths:
                   type: string
                   description: "WebId zum Solid Pod des Studenten"
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
-                given_name:
+                givenNamee:
                   type: string
                   description: "Vorname des Studenten"
                   example: "Petra"
-                family_name:
+                familyName:
                   type: string
                   description: "Nachname des Studenten"
                   example: "Plietsch"
-                full_name:
+                fullName:
                   type: string
                   description: "Voller Name des Studenten"
                   example: "Petra Clara Plietsch"
-                target_web_id:
+                tenantWebId:
                   type: string
                   description: "WebId des Vermieter Pods"
                   example: "https://solid.valetudo.casa/lord/profile/card#me"
               required:
-                - web_id
-                - given_name
-                - family_name
-                - target_web_id
+                - tenantWebId
+                - givenName
+                - familyName
+                - fullName
+                - landlordWebId
       responses:
         "200":
           description: Address saved
