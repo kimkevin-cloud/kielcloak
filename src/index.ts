@@ -245,7 +245,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   if (!session.info.webId || !session.info.isLoggedIn) {
     const errorMessage = "Unauthorized";
     console.error(errorMessage);
-    return res.status(401).json({
+    return res.status(503).json({
       error: errorMessage,
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
@@ -266,7 +266,18 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const forms = formatForms(containedUrls, encodedWebID);
     // mockUserForms zum Testen !!!
     console.log("Formatierte Anträge: ", forms);
-    return res.status(200).json(forms);
+    
+    if (forms.forms.length === 0) {
+      return res.status(201).json({
+        forms,
+        message: "Nutzer hat noch keine Anträge gestellt."
+      });
+    }
+    else 
+      return res.status(200).json({
+        forms,
+        message: "Anträgen des Nutzers gefunden!"
+      });
 
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);

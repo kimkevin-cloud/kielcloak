@@ -103,7 +103,7 @@ paths:
             example: https://solid.valetudo.casa/stud/profile/card#me
       responses:
         "200":
-          description: JSON mit Anträgen des Nutzers (timestamp und antrag-type)
+          description: Anträgen des Nutzers gefunden! (antrag_type und timestamp als JSON)
           content:
             application/json:
               schema:
@@ -114,7 +114,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        antragType:
+                        antrag_type:
                           type: string
                           example: begruessungsgeld
                         timestamp:
@@ -124,8 +124,14 @@ paths:
                   status:
                     type: string
                     example: ok
+        "201":
+          description: "Nutzer hat noch keine Anträge gestellt."
         "400":
           description: "Nutzer nicht gefunden"
+        "500":
+          description: "Internal server error."
+        "503":
+          description: "Unauthorized."
   /send_webid:
     post:
       summary: Meldung der WebId des Studenten
@@ -176,3 +182,6 @@ paths:
                     example: "ok"
         "400":
           description: Invalid input
+          description: "Fehlende oder ungültige web_id."
+        "500":
+          description: "Internal server error."
