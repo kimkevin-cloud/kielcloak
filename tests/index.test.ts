@@ -113,7 +113,7 @@ describe("SessionLogin", () => {
     process.env.CLIENT_ID = undefined;
 
     await expect(SessionLogin()).rejects.toThrow(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
     );
   });
 });
@@ -205,7 +205,7 @@ describe("moveData", () => {
       {
         contentType: "text/turtle",
         fetch: session.fetch,
-      }
+      },
     );
   });
 
@@ -213,20 +213,20 @@ describe("moveData", () => {
     const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
-      "https://pod.example.com/MailBox/"
+      "https://pod.example.com/MailBox/",
     );
     await expect(
       // simulate missing file by passing undefined
       moveData(
         undefined as unknown as Blob,
         "test.ttl",
-        "https://pod.example.com/MailBox/"
-      )
+        "https://pod.example.com/MailBox/",
+      ),
     ).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!"
+      "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
     await expect(moveData(file, "", "")).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!"
+      "sourceURL, fileName oder targetURL ist nicht definiert!",
     );
   });
 
@@ -235,8 +235,8 @@ describe("moveData", () => {
       createDritteFile(
         "https://example.com/data",
         "test.txt",
-        "https://pod.example.com/MailBox/"
-      )
+        "https://pod.example.com/MailBox/",
+      ),
     ).toThrow("Dateiname muss mit .ttl enden!");
   });
 
@@ -245,11 +245,11 @@ describe("moveData", () => {
     const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
-      "https://pod.example.com/MailBox/"
+      "https://pod.example.com/MailBox/",
     );
 
     await expect(
-      moveData(file, "test.ttl", "https://pod.example.com/MailBox/")
+      moveData(file, "test.ttl", "https://pod.example.com/MailBox/"),
     ).rejects.toThrow("KielCloak nicht eingeloggt oder WebID fehlt.");
   });
 });
@@ -263,7 +263,7 @@ describe("antragExists", () => {
     const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
-      solidClient.mockSolidDatasetFrom("https://example.com")
+      solidClient.mockSolidDatasetFrom("https://example.com"),
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
@@ -283,7 +283,7 @@ describe("antragExists", () => {
     const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
-      solidClient.mockSolidDatasetFrom("https://example.com")
+      solidClient.mockSolidDatasetFrom("https://example.com"),
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
@@ -303,7 +303,7 @@ describe("antragExists", () => {
     const fileName = "test.ttl";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "KielCloak nicht eingeloggt oder WebID fehlt."
+      "KielCloak nicht eingeloggt oder WebID fehlt.",
     );
   });
 
@@ -315,7 +315,7 @@ describe("antragExists", () => {
     const fileName = "test.ttl";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "KIELCLOAK_POD_URL ist nicht definiert!"
+      "KIELCLOAK_POD_URL ist nicht definiert!",
     );
   });
 
@@ -326,7 +326,7 @@ describe("antragExists", () => {
     const fileName = "test.txt";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "Dateiname muss mit .ttl enden!"
+      "Dateiname muss mit .ttl enden!",
     );
   });
 
@@ -339,7 +339,7 @@ describe("antragExists", () => {
     vi.mocked(solidClient.getSolidDataset).mockRejectedValue(new Error("test"));
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "Container konnte nicht geladen werden: test"
+      "Container konnte nicht geladen werden: test",
     );
   });
 });
@@ -356,7 +356,7 @@ describe("landlordMailboxFromWebId", () => {
     const invalidWebId = "https://example.com/some/trashy/path";
 
     expect(() => landlordMailboxFromWebId(invalidWebId)).toThrowError(
-      "Ungültige Vermieter WebID"
+      "Ungültige Vermieter WebID",
     );
   });
 });
@@ -378,10 +378,10 @@ describe("createTenantWebIdFile", () => {
     expect(content).toContain('foaf:givenName "Max";');
     expect(content).toContain('foaf:familyName "Mustermann";');
     expect(content).toContain(
-      'schema:name "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen";'
+      'schema:name "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen";',
     );
     expect(content).toContain(
-      'schema:identifier "https://tenant.example.com/profile/card#me"'
+      'schema:identifier "https://tenant.example.com/profile/card#me"',
     );
   });
 
@@ -401,10 +401,10 @@ describe("createTenantWebIdFile", () => {
     expect(content).toContain('foaf:givenName "Ma\\"x";');
     expect(content).toContain('foaf:familyName "Muster\\\\mann";');
     expect(content).toContain(
-      'schema:name "Max Michael Herbert Mustermann IV\\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\\nunter dem Musterhimmel bei den sieben Seen";'
+      'schema:name "Max Michael Herbert Mustermann IV\\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\\nunter dem Musterhimmel bei den sieben Seen";',
     );
     expect(content).toContain(
-      'schema:identifier "https://tenant.example.com/\\"profile\\"/card#me"'
+      'schema:identifier "https://tenant.example.com/\\"profile\\"/card#me"',
     );
   });
 });
@@ -412,7 +412,7 @@ describe("createTenantWebIdFile", () => {
 describe("sanitizeForFilename", () => {
   it("should replace https:// with https-", () => {
     expect(sanitizeForFilename("https://example.com")).toBe(
-      "https-example.com"
+      "https-example.com",
     );
   });
 
@@ -422,7 +422,7 @@ describe("sanitizeForFilename", () => {
 
   it("should replace special characters with dashes", () => {
     expect(sanitizeForFilename("file name with spaces")).toBe(
-      "file-name-with-spaces"
+      "file-name-with-spaces",
     );
     expect(sanitizeForFilename("file/name:foo")).toBe("file-name-foo");
   });
@@ -444,7 +444,7 @@ describe("buildAnfrageFilename", () => {
     const expectedBase64 = Buffer.from(tenantWebId, "utf8").toString("base64");
     const expectedFilename = `anfrage_Max-Mustermann_${expectedBase64}.ttl`;
     expect(buildAnfrageFilename(tenantName, tenantWebId)).toBe(
-      expectedFilename
+      expectedFilename,
     );
   });
 });
