@@ -109,7 +109,7 @@ describe("SessionLogin", () => {
     process.env.CLIENT_ID = undefined;
 
     await expect(SessionLogin()).rejects.toThrow(
-      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER",
+      "Missing environment variables CLIENT_ID, CLIENT_SECRET, or OIDC_ISSUER"
     );
   });
 });
@@ -201,7 +201,7 @@ describe("moveData", () => {
       {
         contentType: "text/turtle",
         fetch: session.fetch,
-      },
+      }
     );
   });
 
@@ -209,20 +209,20 @@ describe("moveData", () => {
     const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
-      "https://pod.example.com/MailBox/",
+      "https://pod.example.com/MailBox/"
     );
     await expect(
       // simulate missing file by passing undefined
       moveData(
         undefined as unknown as Blob,
         "test.ttl",
-        "https://pod.example.com/MailBox/",
-      ),
+        "https://pod.example.com/MailBox/"
+      )
     ).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!",
+      "sourceURL, fileName oder targetURL ist nicht definiert!"
     );
     await expect(moveData(file, "", "")).rejects.toThrow(
-      "sourceURL, fileName oder targetURL ist nicht definiert!",
+      "sourceURL, fileName oder targetURL ist nicht definiert!"
     );
   });
 
@@ -231,8 +231,8 @@ describe("moveData", () => {
       createDritteFile(
         "https://example.com/data",
         "test.txt",
-        "https://pod.example.com/MailBox/",
-      ),
+        "https://pod.example.com/MailBox/"
+      )
     ).toThrow("Dateiname muss mit .ttl enden!");
   });
 
@@ -241,11 +241,11 @@ describe("moveData", () => {
     const file = createDritteFile(
       "https://example.com/data",
       "test.ttl",
-      "https://pod.example.com/MailBox/",
+      "https://pod.example.com/MailBox/"
     );
 
     await expect(
-      moveData(file, "test.ttl", "https://pod.example.com/MailBox/"),
+      moveData(file, "test.ttl", "https://pod.example.com/MailBox/")
     ).rejects.toThrow("KielCloak nicht eingeloggt oder WebID fehlt.");
   });
 });
@@ -259,7 +259,7 @@ describe("antragExists", () => {
     const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
-      solidClient.mockSolidDatasetFrom("https://example.com"),
+      solidClient.mockSolidDatasetFrom("https://example.com")
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
@@ -279,7 +279,7 @@ describe("antragExists", () => {
     const podUrlParsed = new URL(process.env.KIELCLOAK_POD_URL!);
 
     vi.mocked(solidClient.getSolidDataset).mockResolvedValue(
-      solidClient.mockSolidDatasetFrom("https://example.com"),
+      solidClient.mockSolidDatasetFrom("https://example.com")
     );
 
     vi.mocked(solidClient.getContainedResourceUrlAll).mockReturnValue([
@@ -299,7 +299,7 @@ describe("antragExists", () => {
     const fileName = "test.ttl";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "KielCloak nicht eingeloggt oder WebID fehlt.",
+      "KielCloak nicht eingeloggt oder WebID fehlt."
     );
   });
 
@@ -311,7 +311,7 @@ describe("antragExists", () => {
     const fileName = "test.ttl";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "KIELCLOAK_POD_URL ist nicht definiert!",
+      "KIELCLOAK_POD_URL ist nicht definiert!"
     );
   });
 
@@ -322,7 +322,7 @@ describe("antragExists", () => {
     const fileName = "test.txt";
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "Dateiname muss mit .ttl enden!",
+      "Dateiname muss mit .ttl enden!"
     );
   });
 
@@ -335,7 +335,7 @@ describe("antragExists", () => {
     vi.mocked(solidClient.getSolidDataset).mockRejectedValue(new Error("test"));
 
     await expect(antragExists(fileName)).rejects.toThrow(
-      "Container konnte nicht geladen werden: test",
+      "Container konnte nicht geladen werden: test"
     );
   });
 });
