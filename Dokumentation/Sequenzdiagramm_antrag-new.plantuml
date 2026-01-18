@@ -24,10 +24,10 @@ alt Antrags-Typ ist "begruessungsgeld"
     else Antrags-Typ ist nicht begruessungsgeld oder noch nicht beantragt
     KielCloak -> KielCloak: Erstellt aktuellen Timestamp in Millisekunden
     KielCloak -> KielCloak : Erstellt Dateiname aus Antrags-Typ und WebID und Timestamp
-    alt Antrag existiert bereits für User
+    alt Antrags-Datei existiert bereits für User
         KielCloak --> Frontend : Response Error: Antrag existiert bereits
         Frontend -> User : Fehlermeldung
-    else Antrag existiert nicht für User
+    else Antrags-Datei existiert nicht für User
       KielCloak -> KielCloak : Erstellt ACL für Antrags-TTL (User bekommt nur Leserechte)
         KielCloak -> KielPod : Speichert Antrags-TTL mit Dateinamen im Container ./antraege/
         KielPod --> KielCloak : Response OK
