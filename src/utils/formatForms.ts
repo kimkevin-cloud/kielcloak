@@ -11,13 +11,18 @@ import { UserForms } from "../types.js";
  *  }[]
  * }
  */
-export function formatForms(filenames: string[], webId: string): UserForms {
-  
+export function formatForms(urls: string[], webId: string): UserForms {
   const forms: { antrag_type: string; timestamp: string }[] = [];
 
-  filenames.map((f) => f.replace(/'/g, ""))
-    .forEach((f) => {
-      const match = f.match(/^antrag_(.+?)_([^_]+)_(\d+)\.ttl$/);
+  urls
+    .map((url) => {
+      // Extraer el nombre de archivo de la URL
+      const filename = url.split("/").pop() || "";
+      // Limpiar caracteres especiales
+      return filename.replace(/'/g, "");
+    })
+    .forEach((filename) => {
+      const match = filename.match(/^antrag_(.+?)_([^_]+)_(\d+)\.ttl$/);
       if (match && match[2] === webId) {
         const form = {
           antrag_type: match[1]!,

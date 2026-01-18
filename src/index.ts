@@ -10,9 +10,7 @@ import {
   getContainedResourceUrlAll,
   getResourceInfo,
   getSolidDataset,
-  isContainer,
-  overwriteFile,
-  UrlString
+  isContainer
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 import { UserForms } from "./types.js";
@@ -23,6 +21,7 @@ import { antragExists } from "./utils/antragExists.js";
 import { createAntragACL } from "./utils/createAntragACL.js";
 import { formatForms } from "./utils/formatForms.js";
 import { startServer } from "./utils/Login.js";
+import { mockEncodedWebID, mockFormURLs, mockUserForms } from "./mockData.js"
 
 dotenv.config();
 
@@ -33,29 +32,6 @@ const session = new Session(); // Backend Session
 app.use(express.static("public"));
 app.use(express.json());
 app.use(cors());
-
-
-// Mock zum Testen
-const mockUserForms: UserForms = {
-  forms: [
-    {
-    antrag_type: "Begrüssungsgeld",
-    timestamp: "2026-01-10T12:00:00Z"
-    },
-    {
-    antrag_type: "Ummeldung",
-    timestamp: "2026-01-11T09:30:00Z"
-    },
-    {
-    antrag_type: "Ummeldung2",
-    timestamp: "2026-09-22T06:48:10Z"
-    },
-    {
-    antrag_type: "Ummeldung",
-    timestamp: "2026-03-07T14:12:45Z"
-    }
-  ]
-};
 
 app.get("/", (_: Request, res: Response) => {
   res.send("Backend running!");
@@ -283,14 +259,14 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       fetch: session.fetch,
     });
     
-    const containedUrls = getContainedResourceUrlAll(solidDataSet);
+    const containedUrls = await getContainedResourceUrlAll(solidDataSet);
     console.log("Contained URLs: ", containedUrls);
     // Formatiert forms zu einem UserForms object
+    console.log("URLs werden formatiert: ", containedUrls);
     const forms = formatForms(containedUrls, encodedWebID);
-
     // mockUserForms zum Testen !!!
-    console.log("Formatierte Anträge: ", mockUserForms);
-    return res.status(200).json({mockUserForms});
+    console.log("Formatierte Anträge: ", forms);
+    return res.status(200).json(forms);
 
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);
@@ -461,10 +437,6 @@ export {
   port,
   app,
   dotenv,
-  createDritteFile,
-  moveData,
-  createAntragACL,
-  antragExists,
   landlordMailboxFromWebId,
   createTenantWebIdFile,
   sanitizeForFilename,
