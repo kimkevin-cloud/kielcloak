@@ -14,17 +14,15 @@ Frontend -> UserPod : Liest Adresse aus addressbesteatigung-{Milisekunden}.ttl
 Frontend -> User : Fragt, ob Daten richtig sind\n(über Zusammenfassungsseite)
 User -> Frontend : Bestätigung
 Frontend -> KielCloak : /antrag/new(WebID, Antrags-Typ \n und Antrags-TTL als Blob
-
 KielCloak -> KielCloak : Konvertiert WebID in Base64 um
-KielCloak -> KielCloak: Erstellt aktuellen Timestamp in Millisekunden
 alt Antrags-Typ ist "begruessungsgeld"
     KielCloak -> KielPod: Fragt alle Dateien im Container ./antraege/ an
     KielPod --> KielCloak: Response mit Dateiliste
     KielCloak -> KielCloak: Prüft, ob bereits eine Datei mit dieser WebID mit Antrags-Typ existiert
-    alt begruessungsgeld wurde schon beantragt
         KielCloak --> Frontend : Response Error: Begruessungsgeld bereits beantragt
         Frontend -> User : Fehlermeldung
     else Antrags-Typ ist nicht begruessungsgeld oder noch nicht beantragt
+    KielCloak -> KielCloak: Erstellt aktuellen Timestamp in Millisekunden
     KielCloak -> KielCloak : Erstellt Dateiname aus Antrags-Typ und WebID und Timestamp
     alt Antrag existiert bereits für User
         KielCloak --> Frontend : Response Error: Antrag existiert bereits
