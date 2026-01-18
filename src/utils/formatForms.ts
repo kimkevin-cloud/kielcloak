@@ -1,4 +1,3 @@
-
 /**
  * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
  * @param urls Liste alles URLs, die man transformieren muss.

@@ -1,4 +1,7 @@
-import { getContainedResourceUrlAll, getSolidDataset } from "@inrupt/solid-client";
+import {
+  getContainedResourceUrlAll,
+  getSolidDataset,
+} from "@inrupt/solid-client";
 import { session } from "../index.js";
 
 /**

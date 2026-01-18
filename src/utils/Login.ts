@@ -3,7 +3,9 @@ import { session, app, port } from "../index.js";
 /**
  *  Initialisierung des Backends
  */
-export async function ensureLoginWithRetry(intervalMs: number = 5000): Promise<void> {
+export async function ensureLoginWithRetry(
+  intervalMs: number = 5000,
+): Promise<void> {
   // Infinite retry loop until SessionLogin succeeds
   for (;;) {
     try {
@@ -17,7 +19,6 @@ export async function ensureLoginWithRetry(intervalMs: number = 5000): Promise<v
     await new Promise((resolve) => setTimeout(resolve, intervalMs));
   }
 }
-
 
 /**
  * Handles Login for Backend service

@@ -11,7 +11,11 @@ import { session } from "../index.js";
  *  Bank : http://localhost:3000/bank/MailBox
  *  Uni : http://localhost:3000/uni/MailBox
  */
-export async function moveData(file: Blob, fileName: string, targetURL: string) {
+export async function moveData(
+  file: Blob,
+  fileName: string,
+  targetURL: string,
+) {
   if (!file || !targetURL || !fileName || targetURL === "" || fileName === "") {
     throw new Error("sourceURL, fileName oder targetURL ist nicht definiert!");
   }

@@ -4,7 +4,11 @@
  * @param filename Dateiname
  * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
  */
-export function createDritteFile( sourceURL: string, filename: string, targetURL: string): Blob {
+export function createDritteFile(
+  sourceURL: string,
+  filename: string,
+  targetURL: string,
+): Blob {
   if (!filename.endsWith(".ttl"))
     throw new Error("Dateiname muss mit .ttl enden!");
 

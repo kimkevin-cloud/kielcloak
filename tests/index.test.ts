@@ -5,7 +5,6 @@ import {
   sanitizeForFilename,
   buildAnfrageFilename,
 } from "../src/index.js";
-import { UserForms } from "../src/types.js";
 import { extractPodname } from "../src/utils/extractPodname.js";
 import { createDritteFile } from "../src/utils/createDritteFile.js";
 import { moveData } from "../src/utils/moveData.js";
@@ -13,7 +12,11 @@ import { antragExists } from "../src/utils/antragExists.js";
 import { createAntragACL } from "../src/utils/createAntragACL.js";
 import { formatForms } from "../src/utils/formatForms.js";
 import { startServer } from "../src/utils/Login.js";
-import { mockEncodedWebID, mockFormURLs, mockUserForms } from "../src/mockData.js"
+import {
+  mockEncodedWebID,
+  mockFormURLs,
+  mockUserForms,
+} from "../src/mockData.js";
 import { SessionLogin } from "../src/utils/Login.js";
 import { session } from "../src/index.js";
 import * as solidClient from "@inrupt/solid-client";
@@ -456,20 +459,21 @@ describe("buildAnfrageFilename", () => {
 
 describe("extractPodname", () => {
   it("Extrahiert Podname aus einer gültigen WebID", () => {
-    
     const WebID = "https://solid.valetudo.casa/stud/profile/card#me";
     expect(extractPodname(WebID)).toBe("stud");
   });
 
   it("Throws error wenn die gegebene WebID ungültig ist.", () => {
-    const FakeWebID1 = '';
+    const FakeWebID1 = "";
     const FakeWebID2 = "https://localhost:3000/";
     const FakeWebID3 = "notaURL";
 
     expect(() => extractPodname(FakeWebID1)).toThrow("Ungültige URL");
-    expect(() => extractPodname(FakeWebID2)).toThrow("Podname konnte nicht extrahiert werden");
+    expect(() => extractPodname(FakeWebID2)).toThrow(
+      "Podname konnte nicht extrahiert werden",
+    );
     expect(() => extractPodname(FakeWebID3)).toThrow("URL ist nicht valide");
-  })
+  });
 });
 
 describe("formatForms", () => {
@@ -493,8 +497,7 @@ describe("formatForms", () => {
   });
 
   it("Soll eine leere Liste zurückgeben, wenn es keinen Antrag für die gegebene WebID gibt", () => {
-    const fakeWebID =
-      "aHR0cDovL2xvY2FsaG9_FAKE_WEB_ID_WQvcHJvZmlsZS9jYXJkI21l";
+    const fakeWebID = "aHR0cDovL2xvY2FsaG9_FAKE_WEB_ID_WQvcHJvZmlsZS9jYXJkI21l";
 
     expect(formatForms(mockFormURLs, fakeWebID)).toEqual({
       forms: [],
@@ -519,9 +522,7 @@ describe("formatForms", () => {
   });
 
   it("Ignoriert URLs ohne Dateinamen", () => {
-    const urls = [
-      "https://solid.valetudo.casa/kielcloak/antraege/",
-    ];
+    const urls = ["https://solid.valetudo.casa/kielcloak/antraege/"];
 
     expect(formatForms(urls, mockEncodedWebID)).toEqual({
       forms: [],
