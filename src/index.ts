@@ -34,6 +34,29 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(cors());
 
+
+// Mock zum Testen
+const mockUserForms: UserForms = {
+  forms: [
+    {
+    antrag_type: "Begrüssungsgeld",
+    timestamp: "2026-01-10T12:00:00Z"
+    },
+    {
+    antrag_type: "Ummeldung",
+    timestamp: "2026-01-11T09:30:00Z"
+    },
+    {
+    antrag_type: "Ummeldung2",
+    timestamp: "2026-09-22T06:48:10Z"
+    },
+    {
+    antrag_type: "Ummeldung",
+    timestamp: "2026-03-07T14:12:45Z"
+    }
+  ]
+};
+
 app.get("/", (_: Request, res: Response) => {
   res.send("Backend running!");
 });
@@ -249,18 +272,6 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     });
   }
   console.log("Backend logged in!");
-
-  const podname = extractPodname(WebID);
-  if (!podname) {
-    const errorMessage = "Ungültige WebID";
-    console.error(errorMessage);
-    return res.status(400).json({
-      error: errorMessage,
-      message: "Podname konnte aus WebID nicht gelesen werden.",
-    });
-  }
-  console.log("Podname: ", podname);
-
   try {
     const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`
     console.log("URL: ", URL);
@@ -268,14 +279,15 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const solidDataSet = await getSolidDataset(URL || "", {
       fetch: session.fetch,
     });
+    
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
-    console.log(containedUrls);
-    /**
-    * PROBLEM MIT BERECHTIGUNG
-    **/
-    const forms = formatForms(containedUrls);
-    console.log("Anträge gefunden!");
-    return res.status(200).json({forms});
+    console.log("Contained URLs: ", containedUrls);
+    // Formatiert forms zu einem UserForms object
+    const forms = formatForms(containedUrls, WebID);
+
+    // mockUserForms zum Testen !!!
+    console.log("Formatierte Anträge: ", mockUserForms);
+    return res.status(200).json({mockUserForms});
 
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);
