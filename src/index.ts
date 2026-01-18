@@ -20,7 +20,6 @@ import { antragExists } from "./utils/antragExists.js";
 import { createAntragACL } from "./utils/createAntragACL.js";
 import { formatForms } from "./utils/formatForms.js";
 import { startServer } from "./utils/Login.js";
-import { mockEncodedWebID, mockFormURLs, mockUserForms } from "./mockData.js"
 
 dotenv.config();
 
@@ -251,8 +250,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   }
   console.log("Backend logged in!");
   try {
-    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`
-    console.log("URL: ", URL);
+    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
     // Retrieves a List of URLs to all Resources in the container
     const solidDataSet = await getSolidDataset(URL || "", {
       fetch: session.fetch,

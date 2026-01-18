@@ -11,12 +11,6 @@ import { moveData } from "../src/utils/moveData.js";
 import { antragExists } from "../src/utils/antragExists.js";
 import { createAntragACL } from "../src/utils/createAntragACL.js";
 import { formatForms } from "../src/utils/formatForms.js";
-import { startServer } from "../src/utils/Login.js";
-import {
-  mockEncodedWebID,
-  mockFormURLs,
-  mockUserForms,
-} from "../src/mockData.js";
 import { SessionLogin } from "../src/utils/Login.js";
 import { session } from "../src/index.js";
 import * as solidClient from "@inrupt/solid-client";
