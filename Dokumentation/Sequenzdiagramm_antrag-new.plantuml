@@ -15,18 +15,28 @@ Frontend -> User : Fragt, ob Daten richtig sind\n(über Zusammenfassungsseite)
 User -> Frontend : Bestätigung
 Frontend -> KielCloak : /antrag/new(WebID, Antrags-Typ \n und Antrags-TTL als Blob
 
-KielCloak -> KielCloak : Extrahiert podname aus WebID
-KielCloak -> KielCloak : Erstellt Dateiname aus podname und Antrags-Typ
-alt Antrag existiert bereits für User
-    KielCloak --> Frontend : Response Error: Antrag existiert bereits
-    Frontend -> User : Fehlermeldung
-else Antrag existiert nicht für User
-    KielCloak -> KielCloak : Erstellt ACL für Antrags-TTL (User bekommt nur Leserechte)
-    KielCloak -> KielPod : Speichert Antrags-TTL mit Dateinamen im Container ./antraege/
-    KielPod --> KielCloak : Response OK
-    KielCloak -> KielPod : Speichert ACL zur Antrags-TTL im Container ./antraege/
-    KielPod --> KielCloak : Response OK
-    KielCloak --> Frontend : Response OK
-    Frontend -> User : Erfolgsmeldung
+KielCloak -> KielCloak : Konvertiert WebID in Base64 um
+KielCloak -> KielCloak: Erstellt aktuellen Timestamp in Millisekunden
+alt Antrags-Typ ist "begruessungsgeld"
+    KielCloak -> KielPod: Fragt alle Dateien im Container ./antraege/ an
+    KielPod --> KielCloak: Response mit Dateiliste
+    KielCloak -> KielCloak: Prüft, ob bereits eine Datei mit dieser WebID mit Antrags-Typ existiert
+    alt begruessungsgeld wurde schon beantragt
+        KielCloak --> Frontend : Response Error: Begruessungsgeld bereits beantragt
+        Frontend -> User : Fehlermeldung
+    else Antrags-Typ ist nicht begruessungsgeld oder noch nicht beantragt
+    KielCloak -> KielCloak : Erstellt Dateiname aus Antrags-Typ und WebID und Timestamp
+    alt Antrag existiert bereits für User
+        KielCloak --> Frontend : Response Error: Antrag existiert bereits
+        Frontend -> User : Fehlermeldung
+    else Antrag existiert nicht für User
+      KielCloak -> KielCloak : Erstellt ACL für Antrags-TTL (User bekommt nur Leserechte)
+        KielCloak -> KielPod : Speichert Antrags-TTL mit Dateinamen im Container ./antraege/
+        KielPod --> KielCloak : Response OK
+        KielCloak -> KielPod : Speichert ACL zur Antrags-TTL im Container ./antraege/
+        KielPod --> KielCloak : Response OK
+        KielCloak --> Frontend : Response OK
+        Frontend -> User : Erfolgsmeldung
+    end
 end
 @enduml
