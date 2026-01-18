@@ -202,11 +202,11 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   try {
     const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
     const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
-    const podname = btoa(WebID);
+    const base64WebID = btoa(WebID);
     if (antrag_type === "begruessungsgeld") {
       const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
       for (const entry of entries) {
-        if (entry.url.includes(`${antrag_type}_${podname}`)) {
+        if (entry.url.includes(`${antrag_type}_${base64WebID}`)) {
           return res.status(418).json({
             error: "Antrag konnte nicht erstellt werden",
             message: "Antrag für Begrssungsgeld existiert bereits",
@@ -216,7 +216,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     }
 
     const timestamp = Date.now();
-    const filename = `antrag_${antrag_type}_${podname}_${timestamp}.ttl`;
+    const filename = `antrag_${antrag_type}_${base64WebID}_${timestamp}.ttl`;
     // Antrag darf noch nicht existieren
     if (await antragExists(filename)) {
       const errorMessage = "Antrag existiert bereits";
@@ -418,72 +418,6 @@ function createAntragACL(webID: string, fileName: string): Blob {
   return blob;
 }
 
-/**
- * Gibt alle Anträge des Nutzers zurück
- */
-app.get("/antrag/all", async (req: Request, res: Response) => {
-  let WebID: string; // = req.query.webid;
-
-  // Input validation
-  if (typeof req.query.webid != "string" || !req.query.webid) {
-    const errorMessage = "Missing or invalid WebID";
-    console.error(errorMessage);
-    return res.status(400).json({
-      error: errorMessage,
-      message: "web_id nicht definiert!",
-    });
-  } else {
-    WebID = req.query.webid;
-  }
-
-  console.log("WebID: ", WebID);
-
-  // Authentication check
-  if (!session.info.webId || !session.info.isLoggedIn) {
-    const errorMessage = "Unauthorized";
-    console.error(errorMessage);
-    return res.status(401).json({
-      error: errorMessage,
-      message: "KielCloak Session nicht authoriziert oder authentifiziert",
-    });
-  }
-  console.log("Backend logged in!");
-
-  const podname = extractPodname(WebID);
-  if (!podname) {
-    const errorMessage = "Ungültige WebID";
-    console.error(errorMessage);
-    return res.status(400).json({
-      error: errorMessage,
-      message: "Podname konnte aus WebID nicht gelesen werden.",
-    });
-  }
-  console.log("Podname: ", podname);
-
-  try {
-    const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
-    console.log("URL: ", URL);
-    // Retrieves a List of URLs to all Resources in the container
-    const solidDataSet = await getSolidDataset(URL || "", {
-      fetch: session.fetch,
-    });
-    const containedUrls = getContainedResourceUrlAll(solidDataSet);
-    console.log(containedUrls);
-    /**
-     * PROBLEM MIT BERECHTIGUNG
-     **/
-    const forms = formatForms(containedUrls);
-    console.log("Anträge gefunden!");
-    return res.status(200).json({ forms });
-  } catch (error) {
-    console.error("Unerwarteter Fehler in /antrag/all:", error);
-    return res.status(500).json({
-      error: "Internal server error",
-      message: "Ein unerwarteter Fehler ist im Prozess aufgetreten",
-    });
-  }
-});
-
 async function listDirecotries(
   URL: string,
 ): Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>> {
@@ -540,10 +474,6 @@ async function listDirecotries(
  *  }[]
  * }
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function formatForms(urls: string[]) /* : Promise<UserForms> */ {
-  // Impl.
-}
 
 // Exports for testing
 export {
