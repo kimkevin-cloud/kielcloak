@@ -1,0 +1,29 @@
+@startuml Adresse an Dritten nach Ummeldungsprozess weiterleiten
+
+participant UserPod
+actor User
+participant Frontend
+participant KielCloak
+actor "Solid Pod des Backend (kielcloak)" as KielPod
+
+== Anträge eines Users auflisten ==
+
+Frontend -> UserPod : Liest Profildaten aus Pod
+UserPod --> Frontend
+User -> Frontend : Geht "Anträge" Seite 
+Frontend -> KielCloak : /antrag/all?web_id mit WebID des Users
+
+KielCloak -> KielCloak : Codiert WebID zu Base64
+KielCloak -> KielPod : Listet alle Dateien aus kielcloak/antraege/
+KielPod --> KielCloak
+KielCloak -> KielCloak : Filtert Anträge nach der gegebenen WebID
+alt User hat noch keine Anträge gestellt
+    KielCloak -> Frontend : 201 + leere Liste
+    Frontend -> User : "Hier werden deine bereits gestellte oder \n gespeicherte Anträge angezeigt!"
+else User hat mindestend einen Antrag gestellt
+    KielCloak -> KielCloak : Erstellt ein JSON Objekt mit einer Liste \n aller Anträgen + Erstellungsdatum
+    KielCloak -> Frontend : 200 + Objekt mit allen User Anträgen
+    Frontend -> User : Liste aller Anträge mit Erstellungsdatum
+end
+
+@enduml
