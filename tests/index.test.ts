@@ -6,6 +6,10 @@ import {
   createDritteFile,
   moveData,
   session,
+  landlordMailboxFromWebId,
+  createTenantWebIdFile,
+  sanitizeForFilename,
+  buildAnfrageFilename,
 } from "../src/index";
 import * as solidClient from "@inrupt/solid-client";
 
@@ -336,6 +340,111 @@ describe("antragExists", () => {
 
     await expect(antragExists(fileName)).rejects.toThrow(
       "Container konnte nicht geladen werden: test"
+    );
+  });
+});
+
+describe("landlordMailboxFromWebId", () => {
+  it("should return the mailbox URL derived from the landlord WebID", () => {
+    const landlordWebId = "https://example.com/profile/card#me";
+    const expectedMailbox = "https://example.com/MailBox/";
+
+    expect(landlordMailboxFromWebId(landlordWebId)).toBe(expectedMailbox);
+  });
+
+  it("should throw an error if the WebID format is invalid", () => {
+    const invalidWebId = "https://example.com/some/trashy/path";
+
+    expect(() => landlordMailboxFromWebId(invalidWebId)).toThrowError(
+      "Ungültige Vermieter WebID"
+    );
+  });
+});
+
+describe("createTenantWebIdFile", () => {
+  it("should create a Blob with valid Turtle content", async () => {
+    const params = {
+      tenantWebId: "https://tenant.example.com/profile/card#me",
+      givenName: "Max",
+      familyName: "Mustermann",
+      fullName:
+        "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen",
+    };
+
+    const blob = createTenantWebIdFile(params);
+    const content = await blob.text();
+
+    expect(blob.type).toBe("text/turtle");
+    expect(content).toContain('foaf:givenName "Max";');
+    expect(content).toContain('foaf:familyName "Mustermann";');
+    expect(content).toContain(
+      'schema:name "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen";'
+    );
+    expect(content).toContain(
+      'schema:identifier "https://tenant.example.com/profile/card#me"'
+    );
+  });
+
+  it("should escape special characters in the content", async () => {
+    const params = {
+      tenantWebId: 'https://tenant.example.com/"profile"/card#me',
+      givenName: 'Ma"x',
+      familyName: "Muster\\mann",
+      fullName:
+        "Max Michael Herbert Mustermann IV\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\nunter dem Musterhimmel bei den sieben Seen",
+    };
+
+    const blob = createTenantWebIdFile(params);
+    const content = await blob.text();
+
+    // Check for escaped characters
+    expect(content).toContain('foaf:givenName "Ma\\"x";');
+    expect(content).toContain('foaf:familyName "Muster\\\\mann";');
+    expect(content).toContain(
+      'schema:name "Max Michael Herbert Mustermann IV\\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\\nunter dem Musterhimmel bei den sieben Seen";'
+    );
+    expect(content).toContain(
+      'schema:identifier "https://tenant.example.com/\\"profile\\"/card#me"'
+    );
+  });
+});
+
+describe("sanitizeForFilename", () => {
+  it("should replace https:// with https-", () => {
+    expect(sanitizeForFilename("https://example.com")).toBe(
+      "https-example.com"
+    );
+  });
+
+  it("should replace http:// with http-", () => {
+    expect(sanitizeForFilename("http://example.com")).toBe("http-example.com");
+  });
+
+  it("should replace special characters with dashes", () => {
+    expect(sanitizeForFilename("file name with spaces")).toBe(
+      "file-name-with-spaces"
+    );
+    expect(sanitizeForFilename("file/name:foo")).toBe("file-name-foo");
+  });
+
+  it("should remove leading and trailing dashes", () => {
+    expect(sanitizeForFilename("-file-name-")).toBe("file-name");
+  });
+
+  it("should handle multiple dashes", () => {
+    expect(sanitizeForFilename("file--name")).toBe("file-name");
+  });
+});
+
+describe("buildAnfrageFilename", () => {
+  it("should build a valid filename with base64 encoded WebID", () => {
+    const tenantName = "Max Mustermann";
+    const tenantWebId = "https://tenant.example.com/webid";
+
+    const expectedBase64 = Buffer.from(tenantWebId, "utf8").toString("base64");
+    const expectedFilename = `anfrage_Max-Mustermann_${expectedBase64}.ttl`;
+    expect(buildAnfrageFilename(tenantName, tenantWebId)).toBe(
+      expectedFilename
     );
   });
 });
