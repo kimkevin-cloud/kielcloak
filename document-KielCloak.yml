@@ -85,7 +85,11 @@ paths:
                     type: string
                     example: "ok"
         "400":
-          description: Invalid input
+          description: Invalid input or duplicate application
+        "500":
+          description: Server error
+        "401":
+          description: Unauthorized
   /antrag/all:
     get:
       summary: Gibt alle Anträge des Nutzers zurück

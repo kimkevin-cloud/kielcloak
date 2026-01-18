@@ -207,7 +207,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
       for (const entry of entries) {
         if (entry.url.includes(`${antrag_type}_${base64WebID}`)) {
-          return res.status(418).json({
+          return res.status(400).json({
             error: "Antrag konnte nicht erstellt werden",
             message: "Antrag für Begrssungsgeld existiert bereits",
           });
