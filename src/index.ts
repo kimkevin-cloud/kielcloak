@@ -419,6 +419,10 @@ export {
   moveData,
   createAntragACL,
   antragExists,
+  landlordMailboxFromWebId,
+  createTenantWebIdFile,
+  sanitizeForFilename,
+  buildAnfrageFilename,
 };
 
 app.post("/send_webid", async (req: Request, res: Response) => {
