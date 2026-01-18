@@ -13,7 +13,6 @@ import {
   isContainer
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
-import { UserForms } from "./types.js";
 import { extractPodname } from "./utils/extractPodname.js";
 import { createDritteFile } from "./utils/createDritteFile.js";
 import { moveData } from "./utils/moveData.js";
@@ -261,10 +260,8 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     
     const containedUrls = await getContainedResourceUrlAll(solidDataSet);
     console.log("Contained URLs: ", containedUrls);
-    // Formatiert forms zu einem UserForms object
     console.log("URLs werden formatiert: ", containedUrls);
     const forms = formatForms(containedUrls, encodedWebID);
-    // mockUserForms zum Testen !!!
     console.log("Formatierte Anträge: ", forms);
     
     if (forms.forms.length === 0) {

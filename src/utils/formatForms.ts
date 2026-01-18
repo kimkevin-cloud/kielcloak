@@ -1,4 +1,3 @@
-import { UserForms } from "../types.js";
 
 /**
  * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
@@ -11,7 +10,7 @@ import { UserForms } from "../types.js";
  *  }[]
  * }
  */
-export function formatForms(urls: string[], webId: string): UserForms {
+export function formatForms(urls: string[], webId: string) {
   const forms: { antrag_type: string; timestamp: string }[] = [];
 
   urls

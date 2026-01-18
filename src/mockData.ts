@@ -1,7 +1,5 @@
-import { UserForms } from "./types.js";
-
 // Mocks zum Testen
-export const mockUserForms: UserForms = {
+export const mockUserForms = {
   forms: [
     {
     antrag_type: "Begrüssungsgeld",
