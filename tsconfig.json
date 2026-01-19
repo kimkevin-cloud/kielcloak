@@ -14,7 +14,7 @@
     "types": ["node"],
     // and npm install -D @types/node
 
-    // Other OutputsIch habe
+    // Other Outputs
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
