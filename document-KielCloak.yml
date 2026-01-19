@@ -137,11 +137,11 @@ paths:
             schema:
               type: object
               properties:
-                web_id:
+                tenantWebId:
                   type: string
                   description: "WebId zum Solid Pod des Studenten"
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
-                givenNamee:
+                givenName:
                   type: string
                   description: "Vorname des Studenten"
                   example: "Petra"
@@ -153,7 +153,7 @@ paths:
                   type: string
                   description: "Voller Name des Studenten"
                   example: "Petra Clara Plietsch"
-                tenantWebId:
+                landlordWebId:
                   type: string
                   description: "WebId des Vermieter Pods"
                   example: "https://solid.valetudo.casa/lord/profile/card#me"
