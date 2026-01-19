@@ -8,7 +8,9 @@ import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
 import {
   getContainedResourceUrlAll,
+  getResourceInfo,
   getSolidDataset,
+  isContainer,
   overwriteFile,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
@@ -154,6 +156,7 @@ app.post("/send_address", async (req: Request, res: Response) => {
 
     // erfolgreiches Senden der Adresse an alle Dritten
     return res.status(200).json({
+      forms: {},
       message: "OK",
     });
   } catch (error) {
@@ -195,21 +198,25 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
+
   try {
     const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
     const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
-
-    const podname = extractPodname(WebID);
-    if (!podname) {
-      const errorMessage = "Ungültige WebID";
-      // console.error(errorMessage);
-      return res.status(400).json({
-        error: errorMessage,
-        message: "Podname konnte aus WebID nicht gelesen werden.",
-      });
+    const base64WebID = btoa(WebID);
+    if (antrag_type === "begruessungsgeld") {
+      const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
+      for (const entry of entries) {
+        if (entry.url.includes(`${antrag_type}_${base64WebID}`)) {
+          return res.status(400).json({
+            error: "Antrag konnte nicht erstellt werden",
+            message: "Antrag für Begrssungsgeld existiert bereits",
+          });
+        }
+      }
     }
 
-    const filename = `antrag_${antrag_type}_${podname}.ttl`;
+    const timestamp = Date.now();
+    const filename = `antrag_${antrag_type}_${base64WebID}_${timestamp}.ttl`;
     // Antrag darf noch nicht existieren
     if (await antragExists(filename)) {
       const errorMessage = "Antrag existiert bereits";
@@ -410,6 +417,63 @@ function createAntragACL(webID: string, fileName: string): Blob {
   const blob = new Blob([content], { type: "text/turtle" });
   return blob;
 }
+
+async function listDirecotries(
+  URL: string,
+): Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>> {
+  // Ohne Login oder WebID kein Zugriff auf den Pod möglich
+  if (!session.info.webId) {
+    console.warn(
+      "Nicht eingeloggt oder WebID fehlt – schreibe keine Testdaten.",
+    );
+    return [];
+  }
+
+  try {
+    // Container-Metadaten laden
+    const ds = await getSolidDataset(URL, {
+      fetch: session.fetch,
+    });
+    const containedUrls = getContainedResourceUrlAll(ds);
+
+    // Für jeden enthaltenen Resource eine HEAD-Abfrage, um Typ/Container zu ermitteln
+    const entries = await Promise.all(
+      containedUrls.map(async (url) => {
+        try {
+          const info = await getResourceInfo(url, {
+            fetch: session.fetch,
+          });
+          const container = Boolean(isContainer(info));
+          if (container) {
+            return { url, isContainer: true, contentType: "container" };
+          }
+          const ct = info.internal_resourceInfo.contentType;
+          return ct
+            ? { url, isContainer: false, contentType: ct }
+            : { url, isContainer: false };
+        } catch {
+          // Fallback: Heuristik über Slash am Ende (Container enden i. d. R. mit '/')
+          return { url, isContainer: url.endsWith("/") };
+        }
+      }),
+    );
+    return entries;
+  } catch (e) {
+    console.error("Fehler beim Auflisten des Containers:", e);
+    return [];
+  }
+}
+/**
+ * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
+ * @param urls Liste alles URLs, die man transformieren muss.
+ * @returns JSON Objekt der Art
+ * {
+ *  forms {
+ *    "antrag_type": string,
+ *     "timestamp": string
+ *  }[]
+ * }
+ */
 
 // Exports for testing
 export {
