@@ -13,13 +13,13 @@ import {
   isContainer
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
-import { extractPodname } from "./utils/extractPodname";
-import { createDritteFile } from "./utils/createDritteFile";
-import { moveData } from "./utils/moveData";
-import { antragExists } from "./utils/antragExists";
-import { createAntragACL } from "./utils/createAntragACL";
-import { formatForms } from "./utils/formatForms";
-import { startServer } from "./utils/Login";
+import { extractPodname } from "./utils/extractPodname.js";
+import { createDritteFile } from "./utils/createDritteFile.js";
+import { moveData } from "./utils/moveData.js";
+import { antragExists } from "./utils/antragExists.js";
+import { createAntragACL } from "./utils/createAntragACL.js";
+import { formatForms } from "./utils/formatForms.js";
+import { startServer } from "./utils/Login.js";
 
 dotenv.config();
 

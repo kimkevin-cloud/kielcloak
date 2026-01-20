@@ -1,4 +1,4 @@
-import { session, app, port } from "../index";
+import { session, app, port } from "../index.js";
 
 /**
  *  Initialisierung des Backends
