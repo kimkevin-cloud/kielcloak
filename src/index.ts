@@ -222,7 +222,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
  * Gibt alle Anträge des Nutzers zurück 
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
-  const WebID = req.query.web_id?.toString();
+  const WebID = req.query.web_id as string;
 
   // Input validation
   if (!WebID) {
@@ -255,8 +255,8 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const solidDataSet = await getSolidDataset(URL || "", {
       fetch: session.fetch,
     });
-    
-    const containedUrls = await getContainedResourceUrlAll(solidDataSet);
+
+    const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log("Contained URLs: ", containedUrls);
     console.log("URLs werden formatiert: ", containedUrls);
     const forms = formatForms(containedUrls, encodedWebID);
