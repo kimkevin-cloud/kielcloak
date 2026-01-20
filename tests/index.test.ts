@@ -481,27 +481,21 @@ describe("formatForms", () => {
   ];
 
   it("Extrahiert antrag_type und timestamp aus einer Liste von URLs", () => {
-    expect(formatForms(mockFormURLs, mockEncodedWebID)).toEqual({
-      forms: [
-        { antrag_type: "begruessungsgeld", timestamp: "1768012811111" },
-        { antrag_type: "ummeldung3", timestamp: "1768012855555" },
-        { antrag_type: "ummeldung4", timestamp: "1768012899999" },
-      ],
-    });
+    expect(formatForms(mockFormURLs, mockEncodedWebID)).toEqual([
+      { antrag_type: "begruessungsgeld", timestamp: "1768012811111" },
+      { antrag_type: "ummeldung3", timestamp: "1768012855555" },
+      { antrag_type: "ummeldung4", timestamp: "1768012899999" },
+    ]);
   });
 
   it("Soll eine leere Liste zurückgeben, wenn es keinen Antrag für die gegebene WebID gibt", () => {
     const fakeWebID = "aHR0cDovL2xvY2FsaG9_FAKE_WEB_ID_WQvcHJvZmlsZS9jYXJkI21l";
 
-    expect(formatForms(mockFormURLs, fakeWebID)).toEqual({
-      forms: [],
-    });
+    expect(formatForms(mockFormURLs, fakeWebID)).toEqual([]);
   });
 
   it("Soll eine leere Liste zurückgeben bei leerer URL-Liste", () => {
-    expect(formatForms([], mockEncodedWebID)).toEqual({
-      forms: [],
-    });
+    expect(formatForms([], mockEncodedWebID)).toEqual([]);
   });
 
   it("Ignoriert URLs mit falschem Dateiformat", () => {
@@ -510,17 +504,13 @@ describe("formatForms", () => {
       "https://example.com/not-an-antrag.txt",
     ];
 
-    expect(formatForms(urls, mockEncodedWebID)).toEqual({
-      forms: [],
-    });
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([]);
   });
 
   it("Ignoriert URLs ohne Dateinamen", () => {
     const urls = ["https://solid.valetudo.casa/kielcloak/antraege/"];
 
-    expect(formatForms(urls, mockEncodedWebID)).toEqual({
-      forms: [],
-    });
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([]);
   });
 
   it("Verarbeitet URLs mit einfachen Anführungszeichen korrekt", () => {
@@ -530,8 +520,8 @@ describe("formatForms", () => {
         "_123.ttl'",
     ];
 
-    expect(formatForms(urls, mockEncodedWebID)).toEqual({
-      forms: [{ antrag_type: "test", timestamp: "123" }],
-    });
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([
+      { antrag_type: "test", timestamp: "123" },
+    ]);
   });
 });

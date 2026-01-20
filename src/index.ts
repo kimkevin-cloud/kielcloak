@@ -243,7 +243,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
-  
+
   try {
     const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
     // Retrieves a List of URLs to all Resources in the container
