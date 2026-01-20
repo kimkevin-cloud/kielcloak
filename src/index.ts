@@ -202,7 +202,9 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   try {
     const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
     const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
-    const base64WebID = Buffer.from(WebID, "utf8").toString("base64").replace(/=+$/g, "");
+    const base64WebID = Buffer.from(WebID, "utf8")
+      .toString("base64")
+      .replace(/=+$/g, "");
     if (antrag_type === "begruessungsgeld") {
       const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
       for (const entry of entries) {
