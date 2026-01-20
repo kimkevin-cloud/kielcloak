@@ -97,10 +97,11 @@ paths:
         - name: web_id
           in: query
           required: true
-          description: WebId zum Solid Pod des Nutzers
+          description: base64 enkodierte WebId zum Solid Pod des Nutzers
           schema:
             type: string
-            example: https://solid.valetudo.casa/stud/profile/card#me
+            example: aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l
+            description: example ist base64 encodierte WebID 'http://localhost:3000/stud/profile/card#me'
       responses:
         "200":
           description: Anträgen des Nutzers gefunden! (antrag_type und timestamp als JSON)

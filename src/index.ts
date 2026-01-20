@@ -222,10 +222,10 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
  * Gibt alle Anträge des Nutzers zurück 
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
-  const WebID = req.query.web_id as string;
+  const base64WebID = req.query.web_id as string;
 
   // Input validation
-  if (!WebID) {
+  if (!base64WebID) {
     const errorMessage = "Missing or invalid WebID";
     console.error(errorMessage);
     return res.status(400).json({
@@ -233,11 +233,6 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       message: "web_id nicht definiert!",
     });
   }
-  
-  // WebID muss laut Absprache zu base64 codiert werden
-  console.log("nicht codierte WebID: ", WebID);
-  const encodedWebID = Buffer.from(WebID, 'utf-8').toString('base64');
-  console.log("base64 WebID: ", encodedWebID);
 
   // Authentication check
   if (!session.info.webId || !session.info.isLoggedIn) {
@@ -248,7 +243,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
       message: "KielCloak Session nicht authoriziert oder authentifiziert",
     });
   }
-  console.log("Backend logged in!");
+  
   try {
     const URL = `${process.env.KIELCLOAK_POD_URL}/antraege/`;
     // Retrieves a List of URLs to all Resources in the container
@@ -259,7 +254,7 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
     console.log("Contained URLs: ", containedUrls);
     console.log("URLs werden formatiert: ", containedUrls);
-    const forms = formatForms(containedUrls, encodedWebID);
+    const forms = formatForms(containedUrls, base64WebID);
     console.log("Formatierte Anträge: ", forms);
     
     if (forms.forms.length === 0) {
