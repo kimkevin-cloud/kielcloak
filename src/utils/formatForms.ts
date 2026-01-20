@@ -26,7 +26,6 @@ export function formatForms(urls: string[], webId: string) {
           antrag_type: match[1]!,
           timestamp: match[3]!,
         };
-        console.log("Gefunden:", form);
         forms.push(form);
       }
     });

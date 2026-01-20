@@ -43,7 +43,6 @@ export async function antragExists(fileName: string): Promise<boolean> {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    // console.error("Fehler beim Laden der Container-Metadaten:", errorMessage);
     throw new Error("Container konnte nicht geladen werden: " + errorMessage);
   }
 }

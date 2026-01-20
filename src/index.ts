@@ -252,10 +252,10 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     });
 
     const containedUrls = getContainedResourceUrlAll(solidDataSet);
-    console.log("Contained URLs: ", containedUrls);
-    console.log("URLs werden formatiert: ", containedUrls);
+    /* console.log("Contained URLs: ", containedUrls);
+    console.log("URLs werden formatiert: ", containedUrls); */
     const forms = formatForms(containedUrls, base64WebID);
-    console.log("Formatierte Anträge: ", forms);
+    /* console.log("Formatierte Anträge: ", forms); */
 
     if (forms.length === 0) {
       return res.status(201).json({
