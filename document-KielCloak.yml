@@ -29,7 +29,7 @@ paths:
                     ]
                 web_id:
                   type: string
-                  description: "WebId zum Solid Pod des Nutzers"
+                  description: WebId zum Solid Pod des Nutzers
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
               required:
                 - address_src_url
@@ -60,7 +60,7 @@ paths:
               properties:
                 web_id:
                   type: string
-                  description: "WebId zum Solid Pod des Nutzers"
+                  description: WebId zum Solid Pod des Nutzers
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
                 antrag_type:
                   type: string
@@ -125,11 +125,20 @@ paths:
                     type: string
                     example: ok
         "201":
-          description: "Nutzer hat noch keine Anträge gestellt."
+          description: Nutzer hat noch keine Anträge gestellt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    description: ist immer leer
+                    example: []
         "400":
-          description: "Nutzer nicht gefunden"
+          description: Fehlende oder ungültige web_id.
         "500":
-          description: "Internal server error."
+          description: Internal server error.
         "503":
           description: "Unauthorized."
   /send_webid:
