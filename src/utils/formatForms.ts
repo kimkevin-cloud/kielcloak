@@ -31,5 +31,5 @@ export function formatForms(urls: string[], webId: string) {
       }
     });
 
-  return { forms };
+  return forms;
 }

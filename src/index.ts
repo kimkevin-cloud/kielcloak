@@ -256,8 +256,8 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     console.log("URLs werden formatiert: ", containedUrls);
     const forms = formatForms(containedUrls, base64WebID);
     console.log("Formatierte Anträge: ", forms);
-    
-    if (forms.forms.length === 0) {
+
+    if (forms.length === 0) {
       return res.status(201).json({
         forms,
         message: "Nutzer hat noch keine Anträge gestellt."
