@@ -1,4 +1,4 @@
-import { session } from "../index.js";
+import { session } from "../index";
 
 /**
  * Erstellt ein ACL (Access Control List) Blob zum Antrag, mit den Berechtigungen für Kielcloak und Nutzer.

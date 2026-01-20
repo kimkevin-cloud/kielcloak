@@ -1,5 +1,5 @@
 import { overwriteFile } from "@inrupt/solid-client";
-import { session } from "../index.js";
+import { session } from "../index";
 
 /**
  * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.

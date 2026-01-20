@@ -2,7 +2,7 @@ import {
   getContainedResourceUrlAll,
   getSolidDataset,
 } from "@inrupt/solid-client";
-import { session } from "../index.js";
+import { session } from "../index";
 
 /**
  * Überprüft, ob ein bestimmter Antrag im KielCloak Pod existiert
