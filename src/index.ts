@@ -117,7 +117,7 @@ app.post("/send_address", async (req: Request, res: Response) => {
     // console.error(errorMessage);
     return res.status(401).json({
       error: errorMessage,
-      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
     });
   }
 
@@ -195,14 +195,16 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
     // console.error(errorMessage);
     return res.status(401).json({
       error: errorMessage,
-      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
     });
   }
 
   try {
     const podUrl = new URL(process.env.KIELCLOAK_POD_URL!).toString();
     const podUrlSanitized = podUrl.endsWith("/") ? podUrl : podUrl + "/";
-    const base64WebID = btoa(WebID);
+    const base64WebID = Buffer.from(WebID, "utf8")
+      .toString("base64")
+      .replace(/=+$/g, "");
     if (antrag_type === "begruessungsgeld") {
       const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
       for (const entry of entries) {
@@ -513,7 +515,7 @@ app.post("/send_webid", async (req: Request, res: Response) => {
   if (!session.info.webId || !session.info.isLoggedIn) {
     return res.status(401).json({
       error: "Unauthorized",
-      message: "KielCloak Session nicht authoriziert oder authentifiziert",
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
     });
   }
 
