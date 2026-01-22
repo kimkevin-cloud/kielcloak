@@ -10,7 +10,7 @@ import {
   getContainedResourceUrlAll,
   getResourceInfo,
   getSolidDataset,
-  isContainer
+  isContainer,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 import { extractPodname } from "./utils/extractPodname.js";
@@ -185,7 +185,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       await moveData(
         aclFile,
         filename + ".acl",
-        podUrlSanitized + "antraege/" || ""
+        podUrlSanitized + "antraege/" || "",
       );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
@@ -219,7 +219,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
  *     "timestamp": string
  *  }[]
  * }
- * Gibt alle Anträge des Nutzers zurück 
+ * Gibt alle Anträge des Nutzers zurück
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
   const base64WebID = (req.query.web_id as string).replace(/=+$/g, "");
@@ -260,15 +260,13 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
     if (forms.length === 0) {
       return res.status(201).json({
         forms,
-        message: "Nutzer hat noch keine Anträge gestellt."
+        message: "Nutzer hat noch keine Anträge gestellt.",
       });
-    }
-    else 
+    } else
       return res.status(200).json({
         forms,
-        message: "Anträgen des Nutzers gefunden!"
+        message: "Anträgen des Nutzers gefunden!",
       });
-
   } catch (error) {
     console.error("Unerwarteter Fehler in /antrag/all:", error);
     return res.status(500).json({
