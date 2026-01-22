@@ -222,7 +222,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
  * Gibt alle Anträge des Nutzers zurück 
  */
 app.get("/antrag/all", async (req: Request, res: Response) => {
-  const base64WebID = req.query.web_id as string;
+  const base64WebID = (req.query.web_id as string).replace(/=+$/g, "");
 
   // Input validation
   if (!base64WebID) {
