@@ -443,7 +443,9 @@ describe("buildAnfrageFilename", () => {
     const tenantName = "Max Mustermann";
     const tenantWebId = "https://tenant.example.com/webid";
 
-    const expectedBase64 = Buffer.from(tenantWebId, "utf8").toString("base64");
+    const expectedBase64 = Buffer.from(tenantWebId, "utf8")
+      .toString("base64")
+      .replace(/=+$/g, "");
     const expectedFilename = `anfrage_Max-Mustermann_${expectedBase64}.ttl`;
     expect(buildAnfrageFilename(tenantName, tenantWebId)).toBe(
       expectedFilename,
