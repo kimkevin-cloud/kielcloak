@@ -235,7 +235,7 @@ describe("POST /antrag/new", () => {
       const response = await request(baseURL)
         .post("/antrag/new")
         .send(testCase.payload);
-      expect([400, 500]).toContain(response.status, `Failed: ${testCase.name}`);
+      expect([400, 500]).toContain(response.status);
       if (response.status === 400) {
         expect(response.body.error).toBe("Missing or invalid parameters");
       }
@@ -375,7 +375,7 @@ describe("POST /send_webid", () => {
       const response = await request(baseURL)
         .post("/send_webid")
         .send(testCase.payload);
-      expect(response.status).toBe(400, `Failed: ${testCase.name}`);
+      expect(response.status).toBe(400);
       expect(response.body.error).toBe("Missing or invalid parameters");
     }
   });
@@ -416,7 +416,7 @@ describe("POST /send_webid", () => {
       const response = await request(baseURL)
         .post("/send_webid")
         .send(testCase.payload);
-      expect(response.status).toBe(400, `Failed: ${testCase.name}`);
+      expect(response.status).toBe(400);
       expect(response.body.error).toBe("Missing or invalid parameters");
     }
   });
