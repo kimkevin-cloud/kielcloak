@@ -1,0 +1,12 @@
+@prefix schema: <https://schema.org/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+<#tenant>
+    a schema:Person;
+    foaf:givenName "Petra";
+    foaf:familyName "Plietsch";
+    schema:name "Petra Plietsch";
+    schema:identifier <http://localhost:3000/stud/profile/card#me>.
+    
+

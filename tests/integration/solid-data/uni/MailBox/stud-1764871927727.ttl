@@ -1,0 +1,7 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+
+<> a dct:Document;
+   dct:created "2025-11-27";
+   # Example: mailbox entry links account holder WebID via owl:sameAs
+   owl:sameAs <http://localhost:3000/stud/address/sample-address.ttl>.

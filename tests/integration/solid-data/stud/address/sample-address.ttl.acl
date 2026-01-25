@@ -1,0 +1,30 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+# Grant Uni read access to this specific resource
+<#uni-read>
+    a acl:Authorization;
+    acl:accessTo <./sample-address.ttl>;
+    acl:agent <http://localhost:3000/uni/profile/card#me>;
+    acl:mode acl:Read.
+
+# Grant Bank read access to this specific resource
+<#bank-read>
+    a acl:Authorization;
+    acl:accessTo <./sample-address.ttl>;
+    acl:agent <http://localhost:3000/bank/profile/card#me>;
+    acl:mode acl:Read.
+
+# Explicitly include Kielcloak (service) read rights as well
+<#kielcloak-read>
+    a acl:Authorization;
+    acl:accessTo <./sample-address.ttl>;
+    acl:agent <http://localhost:3000/kielcloak/profile/card#me>;
+    acl:mode acl:Read.
+
+# Owner (student) full control on the resource
+<#owner>
+    a acl:Authorization;
+    acl:accessTo <./sample-address.ttl>;
+    acl:agent <http://localhost:3000/stud/profile/card#me>;
+    acl:mode acl:Read, acl:Write, acl:Control.
