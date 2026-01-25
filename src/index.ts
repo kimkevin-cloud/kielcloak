@@ -19,7 +19,7 @@ import { moveData } from "./utils/moveData.js";
 import { antragExists } from "./utils/antragExists.js";
 import { createAntragACL } from "./utils/createAntragACL.js";
 import { formatForms } from "./utils/formatForms.js";
-import { startServer, SessionLogin } from "./utils/Login.js";
+import { startServer, SessionLogin, sessionAlive } from "./utils/Login.js";
 
 dotenv.config();
 
@@ -61,18 +61,13 @@ app.post("/send_address", async (req: Request, res: Response) => {
   }
 
   // Authentication check
-  if (!session.info.webId || !session.info.isLoggedIn) {
-    // versuche neue Session zu erstellen (einmaliger versuch bevor Fehlermeldung geworfen wird)
-    try {
-      await SessionLogin();
-    } catch (err) {
-      const errorMessage = "Unauthorized: " + err;
-      // console.error(errorMessage);
-      return res.status(401).json({
-        error: errorMessage,
-        message: "KielCloak Session nicht autorisiert oder authentifiziert",
-      });
-    }
+  if (!await sessionAlive()) {
+    const errorMessage = "Unauthorized";
+    // console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
+    });
   }
 
   try {
@@ -144,18 +139,13 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
   }
 
   // Authentication check
-  if (!session.info.webId || !session.info.isLoggedIn) {
-    // versuche neue Session zu erstellen (einmaliger versuch bevor Fehlermeldung geworfen wird)
-    try {
-      await SessionLogin();
-    } catch (err) {
-      const errorMessage = "Unauthorized: " + err;
-      // console.error(errorMessage);
-      return res.status(401).json({
-        error: errorMessage,
-        message: "KielCloak Session nicht autorisiert oder authentifiziert",
-      });
-    }
+  if (!await sessionAlive()) {
+    const errorMessage = "Unauthorized";
+    // console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
+    });
   }
 
   try {
@@ -245,18 +235,13 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   }
 
   // Authentication check
-  if (!session.info.webId || !session.info.isLoggedIn) {
-    // versuche neue Session zu erstellen (einmaliger versuch bevor Fehlermeldung geworfen wird)
-    try {
-      await SessionLogin();
-    } catch (err) {
-      const errorMessage = "Unauthorized: " + err;
-      // console.error(errorMessage);
-      return res.status(401).json({
-        error: errorMessage,
-        message: "KielCloak Session nicht autorisiert oder authentifiziert",
-      });
-    }
+  if (!await sessionAlive()) {
+    const errorMessage = "Unauthorized";
+    // console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
+    });
   }
 
   try {
@@ -358,18 +343,14 @@ app.post("/send_webid", async (req: Request, res: Response) => {
     });
   }
 
-  if (!session.info.webId || !session.info.isLoggedIn) {
-    // versuche neue Session zu erstellen (einmaliger versuch bevor Fehlermeldung geworfen wird)
-    try {
-      await SessionLogin();
-    } catch (err) {
-      const errorMessage = "Unauthorized: " + err;
-      // console.error(errorMessage);
-      return res.status(401).json({
-        error: errorMessage,
-        message: "KielCloak Session nicht autorisiert oder authentifiziert",
-      });
-    }
+  // Authentication check
+  if (!await sessionAlive()) {
+    const errorMessage = "Unauthorized";
+    // console.error(errorMessage);
+    return res.status(401).json({
+      error: errorMessage,
+      message: "KielCloak Session nicht autorisiert oder authentifiziert",
+    });
   }
 
   try {

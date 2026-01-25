@@ -63,3 +63,21 @@ export async function SessionLogin() {
     console.error("Session login failed.");
   }
 }
+
+/**
+ * Checks if the session is alive
+ * try to login if the session is not alive
+ */
+export async function sessionAlive(): Promise<boolean> {
+  if (!session.info.webId || !session.info.isLoggedIn) {
+    try {
+      // versuche neue Session zu erstellen (einmaliger versuch bevor Fehlermeldung geworfen wird)
+      await SessionLogin();
+      return true;
+    } catch (err) {
+      console.error("Session login failed:", err);
+      return false;
+    }
+  }
+  return true;
+}
