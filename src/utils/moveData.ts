@@ -3,9 +3,9 @@ import { session } from "../index.js";
 
 /**
  * Schreibt eine .ttl Datei in den gegebenen Pod (targetURL) mit einem Verweis zu sourceUrl, wenn ein Login besteht.
- * @param file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
- * @param fileName Name der Datei
- * @param targetURL Empfänger URL, wo die .ttl Datei geschrieben werden soll.
+ * @param {Blob} file Blob mit Verweis zur Adresse im Studenten Pod (z.B. Adresse des Studenten in adress-${ms}.ttl)
+ * @param {string} fileName Name der Datei
+ * @param {string} targetURL Empfänger URL, wo die .ttl Datei geschrieben werden soll.
  *
  * Test URLs:
  *  Bank : http://localhost:3000/bank/MailBox

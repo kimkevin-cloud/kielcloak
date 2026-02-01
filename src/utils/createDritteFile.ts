@@ -1,8 +1,10 @@
 /**
  * Erstellt ein Blob mit Podname und Timestamp im Namen (Bsp.: address_podname-ms.ttl), wo die sourceURL der vom Studenten angegebenen Adresse steht.
- * @param sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
- * @param filename Dateiname
- * @param targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
+ * @param {string} sourceURL Quelle, wo die Adresse im Studenten Pod gespeichert wurde
+ * @param {string} filename Dateiname
+ * @param {string} targetURL Empfänger Mailbox URL. Wird im Inhalt der Datei geschrieben
+ *
+ * @returns {Blob} blob: Datei sourceURL zur Adresse des Studenten
  */
 export function createDritteFile(
   sourceURL: string,

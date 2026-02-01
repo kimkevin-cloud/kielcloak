@@ -6,10 +6,9 @@ import { session } from "../index.js";
 
 /**
  * Überprüft, ob ein bestimmter Antrag im KielCloak Pod existiert
- * @param fileName Name der Antags-Datei, die im KielCloak Pod gesucht wird
+ * @param {string} fileName Name der Antags-Datei, die im KielCloak Pod gesucht wird
  * @returns Ein Promise, das den Boolean-Wert true zurückgibt, wenn die Datei existiert
- * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder
- *            KIELCLOAK_POD_URL nicht definiert ist
+ * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder KIELCLOAK_POD_URL nicht definiert ist
  */
 export async function antragExists(fileName: string): Promise<boolean> {
   const podUrl = process.env.KIELCLOAK_POD_URL;

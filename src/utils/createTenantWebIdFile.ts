@@ -1,3 +1,15 @@
+/**
+ * Erstellt eine Datei (als Blob) im Turtle-Format (.ttl), die die Web-ID-Daten
+ * eines Mieters gemäß schema.org und FOAF-Vokabular enthält.
+ *
+ * @param {Object} params - Die Metadaten des Mieters.
+ * @param {string} params.tenantWebId - Die eindeutige Web-ID des Mieters.
+ * @param {string} params.givenName - Der Vorname des Mieters.
+ * @param {string} params.familyName - Der Nachname des Mieters.
+ * @param {string} params.fullName - Der vollständige Name des Mieters.
+ *
+ * @returns {Blob} Eine Datei im Format "text/turtle", die die RDF-Daten enthält.
+ */
 export function createTenantWebIdFile(params: {
   tenantWebId: string;
   givenName: string;

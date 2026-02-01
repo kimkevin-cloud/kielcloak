@@ -6,6 +6,17 @@ import {
 } from "@inrupt/solid-client";
 import { session } from "../index.js";
 
+/**
+ * Listet alle Ressourcen (Dateien und Unterverzeichnisse) innerhalb eines Solid-Containers auf.
+ * Die Funktion prüft für jede gefundene URL zusätzliche Metadaten wie den Content-Type
+ * und ob es sich um einen Container handelt.
+ *
+ * @param {string} URL - Die vollständige URL des Solid-Containers, der ausgelesen werden soll.
+ * @returns {Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>>}
+ * Ein Promise, das ein Array von Objekten mit URL, Container-Status und optionalem Content-Type zurückgibt.
+ * @example
+ * const dateien = await listDirectories("https://meinpod.solidcommunity.net/public/");
+ */
 export async function listDirectories(
   URL: string,
 ): Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>> {
