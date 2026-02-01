@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  landlordMailboxFromWebId,
-  createTenantWebIdFile,
-  sanitizeForFilename,
-  buildAnfrageFilename,
-} from "../src/index.js";
+import { landlordMailboxFromWebId } from "../src/utils/landlordMailboxFromWebId.js";
+import { createTenantWebIdFile } from "../src/utils/createTenantWebIdFile.js";
+import { buildAnfrageFilename } from "../src/utils/buildAnfrageFilename.js";
 import { extractPodname } from "../src/utils/extractPodname.js";
 import { createDritteFile } from "../src/utils/createDritteFile.js";
 import { moveData } from "../src/utils/moveData.js";
@@ -14,6 +11,7 @@ import { formatForms } from "../src/utils/formatForms.js";
 import { SessionLogin } from "../src/utils/Login.js";
 import { session } from "../src/index.js";
 import * as solidClient from "@inrupt/solid-client";
+import { sanitizeForFilename } from "../src/utils/sanitizeForFilename.js";
 
 vi.mock("@inrupt/solid-client-authn-node", () => {
   // Define the mock class INSIDE the factory so it's available when hoisted
