@@ -11,9 +11,7 @@ actor "Solid Pod des Backend (kielcloak)" as KielPod
 Frontend -> UserPod : Liest Profildaten aus Pod
 UserPod --> Frontend
 User -> Frontend : Geht "Anträge" Seite 
-Frontend -> KielCloak : /antrag/all?web_id mit WebID des Users
-
-KielCloak -> KielCloak : Codiert WebID zu Base64
+Frontend -> KielCloak : /antrag/all?web_id mit base64 \n kodierte WebID des Users
 KielCloak -> KielPod : Listet alle Dateien aus kielcloak/antraege/
 KielPod --> KielCloak
 KielCloak -> KielCloak : Filtert Anträge nach der gegebenen WebID
