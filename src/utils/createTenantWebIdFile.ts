@@ -1,4 +1,3 @@
-
 export function createTenantWebIdFile(params: {
   tenantWebId: string;
   givenName: string;

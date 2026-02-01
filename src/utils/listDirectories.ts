@@ -1,5 +1,10 @@
-import { getContainedResourceUrlAll, getResourceInfo, getSolidDataset, isContainer } from "@inrupt/solid-client";
-import { session, app, port } from "../index.js";
+import {
+  getContainedResourceUrlAll,
+  getResourceInfo,
+  getSolidDataset,
+  isContainer,
+} from "@inrupt/solid-client";
+import { session } from "../index.js";
 
 export async function listDirectories(
   URL: string,

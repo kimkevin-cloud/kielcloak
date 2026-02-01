@@ -8,9 +8,7 @@ import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
 import {
   getContainedResourceUrlAll,
-  getResourceInfo,
   getSolidDataset,
-  isContainer,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 import { extractPodname } from "./utils/extractPodname.js";
@@ -21,9 +19,8 @@ import { createAntragACL } from "./utils/createAntragACL.js";
 import { formatForms } from "./utils/formatForms.js";
 import { startServer, sessionAlive } from "./utils/Login.js";
 import { listDirectories } from "./utils/listDirectories.js";
-import {landlordMailboxFromWebId} from "./utils/landlordMailboxFromWebId.js";
+import { landlordMailboxFromWebId } from "./utils/landlordMailboxFromWebId.js";
 import { createTenantWebIdFile } from "./utils/createTenantWebIdFile.js";
-import { sanitizeForFilename } from "./utils/sanitizeForFilename.js";
 import { buildAnfrageFilename } from "./utils/buildAnfrageFilename.js";
 
 dotenv.config();
@@ -340,9 +337,4 @@ app.post("/send_webid", async (req: Request, res: Response) => {
 });
 
 // Exports for testing
-export {
-  session,
-  port,
-  app,
-  dotenv,
-};
+export { session, port, app, dotenv };
