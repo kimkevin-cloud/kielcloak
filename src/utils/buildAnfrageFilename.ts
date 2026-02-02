@@ -1,4 +1,4 @@
-import { sanitizeForFilename } from "./sanitizeForFilename";
+import { sanitizeForFilename } from "./sanitizeForFilename.js";
 
 /**
  * Generiert einen standardisierten Dateinamen für eine Anfrage-Datei im Turtle-Format (.ttl).
