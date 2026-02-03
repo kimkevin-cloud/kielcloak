@@ -8,9 +8,7 @@ import dotenv from "dotenv"; // Dotenv für das Lesen von env vars
 import cors from "cors"; // To handle Cross Origin Ressource Sharing
 import {
   getContainedResourceUrlAll,
-  getResourceInfo,
   getSolidDataset,
-  isContainer,
 } from "@inrupt/solid-client";
 import { Buffer } from "buffer";
 import { extractPodname } from "./utils/extractPodname.js";
@@ -20,6 +18,10 @@ import { antragExists } from "./utils/antragExists.js";
 import { createAntragACL } from "./utils/createAntragACL.js";
 import { formatForms } from "./utils/formatForms.js";
 import { startServer, sessionAlive } from "./utils/Login.js";
+import { listDirectories } from "./utils/listDirectories.js";
+import { landlordMailboxFromWebId } from "./utils/landlordMailboxFromWebId.js";
+import { createTenantWebIdFile } from "./utils/createTenantWebIdFile.js";
+import { buildAnfrageFilename } from "./utils/buildAnfrageFilename.js";
 
 dotenv.config();
 
@@ -155,7 +157,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       .toString("base64")
       .replace(/=+$/g, "");
     if (antrag_type === "begruessungsgeld") {
-      const entries = await listDirecotries(`${podUrlSanitized}antraege/`);
+      const entries = await listDirectories(`${podUrlSanitized}antraege/`);
       for (const entry of entries) {
         if (entry.url.includes(`${antrag_type}_${base64WebID}`)) {
           return res.status(400).json({
@@ -276,52 +278,6 @@ app.get("/antrag/all", async (req: Request, res: Response) => {
   }
 });
 
-async function listDirecotries(
-  URL: string,
-): Promise<Array<{ url: string; isContainer: boolean; contentType?: string }>> {
-  // Ohne Login oder WebID kein Zugriff auf den Pod möglich
-  if (!session.info.webId) {
-    console.warn(
-      "Nicht eingeloggt oder WebID fehlt – schreibe keine Testdaten.",
-    );
-    return [];
-  }
-
-  try {
-    // Container-Metadaten laden
-    const ds = await getSolidDataset(URL, {
-      fetch: session.fetch,
-    });
-    const containedUrls = getContainedResourceUrlAll(ds);
-
-    // Für jeden enthaltenen Resource eine HEAD-Abfrage, um Typ/Container zu ermitteln
-    const entries = await Promise.all(
-      containedUrls.map(async (url) => {
-        try {
-          const info = await getResourceInfo(url, {
-            fetch: session.fetch,
-          });
-          const container = Boolean(isContainer(info));
-          if (container) {
-            return { url, isContainer: true, contentType: "container" };
-          }
-          const ct = info.internal_resourceInfo.contentType;
-          return ct
-            ? { url, isContainer: false, contentType: ct }
-            : { url, isContainer: false };
-        } catch {
-          // Fallback: Heuristik über Slash am Ende (Container enden i. d. R. mit '/')
-          return { url, isContainer: url.endsWith("/") };
-        }
-      }),
-    );
-    return entries;
-  } catch (e) {
-    console.error("Fehler beim Auflisten des Containers:", e);
-    return [];
-  }
-}
-
 app.post("/send_webid", async (req: Request, res: Response) => {
   const tenantWebId: string = req.body.tenantWebId;
   const givenName: string = req.body.givenName;
@@ -380,69 +336,5 @@ app.post("/send_webid", async (req: Request, res: Response) => {
   }
 });
 
-function landlordMailboxFromWebId(landlordWebId: string): string {
-  if (!landlordWebId.includes("/profile/card#me")) {
-    throw new Error("Ungültige Vermieter WebID");
-  }
-  return landlordWebId.replace("/profile/card#me", "/MailBox/");
-}
-
-function createTenantWebIdFile(params: {
-  tenantWebId: string;
-  givenName: string;
-  familyName: string;
-  fullName: string;
-}): Blob {
-  const esc = (v: string) =>
-    v
-      .replace(/\\/g, "\\\\")
-      .replace(/"/g, '\\"')
-      .replace(/\r/g, "\\r")
-      .replace(/\n/g, "\\n");
-
-  const content = `@prefix schema: <https://schema.org/>.
-@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-
-<#tenant>
-    a schema:Person;
-    foaf:givenName "${esc(params.givenName)}";
-    foaf:familyName "${esc(params.familyName)}";
-    schema:name "${esc(params.fullName)}";
-    schema:identifier "${esc(params.tenantWebId)}".
-`;
-
-  return new Blob([content], { type: "text/turtle" });
-}
-
-function sanitizeForFilename(input: string): string {
-  return (
-    input
-      .trim()
-      .replace(/^https?:\/\//, (m) => (m === "https://" ? "https-" : "http-"))
-      .replace(/[\s/:?#&]+/g, "-")
-
-      // Wie Umlaute behandeln?
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-  );
-}
-
-function buildAnfrageFilename(tenantName: string, tenantWebId: string): string {
-  const tenantWebIdBase64 = Buffer.from(tenantWebId, "utf8")
-    .toString("base64")
-    .replace(/=+$/g, "");
-  return `anfrage_${sanitizeForFilename(tenantName)}_${tenantWebIdBase64}.ttl`;
-}
-
 // Exports for testing
-export {
-  session,
-  port,
-  app,
-  dotenv,
-  landlordMailboxFromWebId,
-  createTenantWebIdFile,
-  sanitizeForFilename,
-  buildAnfrageFilename,
-};
+export { session, port, app, dotenv };

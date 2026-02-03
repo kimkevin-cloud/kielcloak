@@ -1,7 +1,8 @@
 /**
  * Nimmt URLs und gibt einen neuen JSON Objekt zurück mit antrag_type und timestamp
- * @param urls Liste alles URLs, die man transformieren muss.
- * @returns JSON Objekt der Art
+ * @param {string[]} urls Liste alles URLs, die man transformieren muss.
+ * @returns {JSON} JSON Objekt der Art
+ * @example
  * {
  *  forms {
  *    "antrag_type": string,

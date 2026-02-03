@@ -2,11 +2,10 @@ import { session } from "../index.js";
 
 /**
  * Erstellt ein ACL (Access Control List) Blob zum Antrag, mit den Berechtigungen für Kielcloak und Nutzer.
- * @param webID WebID des Nutzers, der den Antrag erstellt hat
- * @param fileName Dateiname des Antrags
- * @returns Ein Blob mit dem Inhalt der ACL
- * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder
- *            KIELCLOAK_POD_URL nicht definiert ist
+ * @param {string} webID WebID des Nutzers, der den Antrag erstellt hat
+ * @param {string} fileName Dateiname des Antrags
+ * @returns {Blob} Datei mit Inhalt der ACL
+ * @throws {Error} Wenn der Dateiname nicht mit .ttl endet oder KIELCLOAK_POD_URL nicht definiert ist
  */
 export function createAntragACL(webID: string, fileName: string): Blob {
   if (!fileName.endsWith(".ttl"))

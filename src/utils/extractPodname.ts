@@ -1,8 +1,8 @@
 /**
  * Extrahiert Podname aus eine gegebene WebID
- * @param url: WebID
- *
- * Beispiel url : "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
+ * @param {string} url: WebID aus dem den Podnamen extrahiert werden soll.
+ * @returns {string} Podname
+ * @example "http://localhost:3000/stud/MailBox/adressenbestaetigung-1765307371.ttl"
  */
 export function extractPodname(url: string): string | undefined {
   if (!url || typeof url !== "string") {
