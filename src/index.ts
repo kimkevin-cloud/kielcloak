@@ -187,7 +187,7 @@ app.post("/antrag/new", async (req: Request, res: Response) => {
       await moveData(
         aclFile,
         filename + ".acl",
-        podUrlSanitized + "antraege/" || "",
+        podUrlSanitized + "antraege/" || ""
       );
     } catch (error) {
       // console.error(`Fehler bei der Kommunikation mit KielCloak Pod`, error);
