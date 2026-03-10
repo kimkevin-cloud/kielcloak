@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  SessionLogin,
-  antragExists,
-  createAntragACL,
-  createDritteFile,
-  moveData,
-  session,
-} from "../src/index";
+import { landlordMailboxFromWebId } from "../src/utils/landlordMailboxFromWebId.js";
+import { createTenantWebIdFile } from "../src/utils/createTenantWebIdFile.js";
+import { buildAnfrageFilename } from "../src/utils/buildAnfrageFilename.js";
+import { extractPodname } from "../src/utils/extractPodname.js";
+import { createDritteFile } from "../src/utils/createDritteFile.js";
+import { moveData } from "../src/utils/moveData.js";
+import { antragExists } from "../src/utils/antragExists.js";
+import { createAntragACL } from "../src/utils/createAntragACL.js";
+import { formatForms } from "../src/utils/formatForms.js";
+import { SessionLogin } from "../src/utils/Login.js";
+import { session } from "../src/index.js";
 import * as solidClient from "@inrupt/solid-client";
+import { sanitizeForFilename } from "../src/utils/sanitizeForFilename.js";
 
 vi.mock("@inrupt/solid-client-authn-node", () => {
   // Define the mock class INSIDE the factory so it's available when hoisted
@@ -337,5 +341,187 @@ describe("antragExists", () => {
     await expect(antragExists(fileName)).rejects.toThrow(
       "Container konnte nicht geladen werden: test",
     );
+  });
+});
+
+describe("landlordMailboxFromWebId", () => {
+  it("should return the mailbox URL derived from the landlord WebID", () => {
+    const landlordWebId = "https://example.com/profile/card#me";
+    const expectedMailbox = "https://example.com/MailBox/";
+
+    expect(landlordMailboxFromWebId(landlordWebId)).toBe(expectedMailbox);
+  });
+
+  it("should throw an error if the WebID format is invalid", () => {
+    const invalidWebId = "https://example.com/some/trashy/path";
+
+    expect(() => landlordMailboxFromWebId(invalidWebId)).toThrowError(
+      "Ungültige Vermieter WebID",
+    );
+  });
+});
+
+describe("createTenantWebIdFile", () => {
+  it("should create a Blob with valid Turtle content", async () => {
+    const params = {
+      tenantWebId: "https://tenant.example.com/profile/card#me",
+      givenName: "Max",
+      familyName: "Mustermann",
+      fullName:
+        "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen",
+    };
+
+    const blob = createTenantWebIdFile(params);
+    const content = await blob.text();
+
+    expect(blob.type).toBe("text/turtle");
+    expect(content).toContain('foaf:givenName "Max";');
+    expect(content).toContain('foaf:familyName "Mustermann";');
+    expect(content).toContain(
+      'schema:name "Max Michael Herbert Mustermann IV von Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier dem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes unter dem Musterhimmel bei den sieben Seen";',
+    );
+    expect(content).toContain(
+      'schema:identifier "https://tenant.example.com/profile/card#me"',
+    );
+  });
+
+  it("should escape special characters in the content", async () => {
+    const params = {
+      tenantWebId: 'https://tenant.example.com/"profile"/card#me',
+      givenName: 'Ma"x',
+      familyName: "Muster\\mann",
+      fullName:
+        "Max Michael Herbert Mustermann IV\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\nunter dem Musterhimmel bei den sieben Seen",
+    };
+
+    const blob = createTenantWebIdFile(params);
+    const content = await blob.text();
+
+    // Check for escaped characters
+    expect(content).toContain('foaf:givenName "Ma\\"x";');
+    expect(content).toContain('foaf:familyName "Muster\\\\mann";');
+    expect(content).toContain(
+      'schema:name "Max Michael Herbert Mustermann IV\\nvon Musterstadt mit der Gnade Gottes und gepriesen von Ihm Klaus Meier\\ndem König von Deutschland und Verteidiger des Glaubens und aller Menschen unseres Musterlandes\\nunter dem Musterhimmel bei den sieben Seen";',
+    );
+    expect(content).toContain(
+      'schema:identifier "https://tenant.example.com/\\"profile\\"/card#me"',
+    );
+  });
+});
+
+describe("sanitizeForFilename", () => {
+  it("should replace https:// with https-", () => {
+    expect(sanitizeForFilename("https://example.com")).toBe(
+      "https-example.com",
+    );
+  });
+
+  it("should replace http:// with http-", () => {
+    expect(sanitizeForFilename("http://example.com")).toBe("http-example.com");
+  });
+
+  it("should replace special characters with dashes", () => {
+    expect(sanitizeForFilename("file name with spaces")).toBe(
+      "file-name-with-spaces",
+    );
+    expect(sanitizeForFilename("file/name:foo")).toBe("file-name-foo");
+  });
+
+  it("should remove leading and trailing dashes", () => {
+    expect(sanitizeForFilename("-file-name-")).toBe("file-name");
+  });
+
+  it("should handle multiple dashes", () => {
+    expect(sanitizeForFilename("file--name")).toBe("file-name");
+  });
+});
+
+describe("buildAnfrageFilename", () => {
+  it("should build a valid filename with base64 encoded WebID", () => {
+    const tenantName = "Max Mustermann";
+    const tenantWebId = "https://tenant.example.com/webid";
+
+    const expectedBase64 = Buffer.from(tenantWebId, "utf8")
+      .toString("base64")
+      .replace(/=+$/g, "");
+    const expectedFilename = `anfrage_Max-Mustermann_${expectedBase64}.ttl`;
+    expect(buildAnfrageFilename(tenantName, tenantWebId)).toBe(
+      expectedFilename,
+    );
+  });
+});
+
+describe("extractPodname", () => {
+  it("Extrahiert Podname aus einer gültigen WebID", () => {
+    const WebID = "https://solid.valetudo.casa/stud/profile/card#me";
+    expect(extractPodname(WebID)).toBe("stud");
+  });
+
+  it("Throws error wenn die gegebene WebID ungültig ist.", () => {
+    const FakeWebID1 = "";
+    const FakeWebID2 = "https://localhost:3000/";
+    const FakeWebID3 = "notaURL";
+
+    expect(() => extractPodname(FakeWebID1)).toThrow("Ungültige URL");
+    expect(() => extractPodname(FakeWebID2)).toThrow(
+      "Podname konnte nicht extrahiert werden",
+    );
+    expect(() => extractPodname(FakeWebID3)).toThrow("URL ist nicht valide");
+  });
+});
+
+describe("formatForms", () => {
+  const mockEncodedWebID =
+    "aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l";
+
+  const mockFormURLs = [
+    "https://solid.valetudo.casa/kielcloak/antraege/antrag_begruessungsgeld_aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l_1768012811111.ttl",
+    "https://solid.valetudo.casa/kielcloak/antraege/antrag_ummeldung3_aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l_1768012855555.ttl",
+    "https://solid.valetudo.casa/kielcloak/antraege/antrag_ummeldung4_aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l_1768012899999.ttl",
+  ];
+
+  it("Extrahiert antrag_type und timestamp aus einer Liste von URLs", () => {
+    expect(formatForms(mockFormURLs, mockEncodedWebID)).toEqual([
+      { antrag_type: "begruessungsgeld", timestamp: "1768012811111" },
+      { antrag_type: "ummeldung3", timestamp: "1768012855555" },
+      { antrag_type: "ummeldung4", timestamp: "1768012899999" },
+    ]);
+  });
+
+  it("Soll eine leere Liste zurückgeben, wenn es keinen Antrag für die gegebene WebID gibt", () => {
+    const fakeWebID = "aHR0cDovL2xvY2FsaG9_FAKE_WEB_ID_WQvcHJvZmlsZS9jYXJkI21l";
+
+    expect(formatForms(mockFormURLs, fakeWebID)).toEqual([]);
+  });
+
+  it("Soll eine leere Liste zurückgeben bei leerer URL-Liste", () => {
+    expect(formatForms([], mockEncodedWebID)).toEqual([]);
+  });
+
+  it("Ignoriert URLs mit falschem Dateiformat", () => {
+    const urls = [
+      "https://example.com/antrag_test_webid_123.pdf",
+      "https://example.com/not-an-antrag.txt",
+    ];
+
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([]);
+  });
+
+  it("Ignoriert URLs ohne Dateinamen", () => {
+    const urls = ["https://solid.valetudo.casa/kielcloak/antraege/"];
+
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([]);
+  });
+
+  it("Verarbeitet URLs mit einfachen Anführungszeichen korrekt", () => {
+    const urls = [
+      "'https://solid.valetudo.casa/kielcloak/antraege/antrag_test_" +
+        mockEncodedWebID +
+        "_123.ttl'",
+    ];
+
+    expect(formatForms(urls, mockEncodedWebID)).toEqual([
+      { antrag_type: "test", timestamp: "123" },
+    ]);
   });
 });

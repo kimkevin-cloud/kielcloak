@@ -28,6 +28,9 @@ export default {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    extensionAlias: {
+      ".js": [".ts"],
+    },
   },
   devtool: "source-map",
 };

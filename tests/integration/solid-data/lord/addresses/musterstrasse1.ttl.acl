@@ -1,0 +1,21 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<#Plietsch>
+    a acl:Authorization;
+    acl:accessTo <./musterstrasse1.ttl>;
+    acl:agent <http://localhost:3000/stud/profile/card#me>; # Solid-Pod des Nutzers, der den Antrag gestellt hat
+    acl:mode acl:Read.
+
+<#owner>
+    a acl:Authorization;
+    acl:agent <http://localhost:3000/lord/profile/card#me>;
+    # Optional owner email, to be used for account recovery:
+    
+    # Zugriffsrechte für den Owner (das Backend) setzen -> muss auf die spezifische Datei zeigen
+    acl:accessTo <./musterstrasse1.ttl>;
+    # All resources will inherit this authorization, by default
+    acl:default <./>;
+    # The owner has all of the access modes allowed
+    acl:mode
+        acl:Read, acl:Write, acl:Control.

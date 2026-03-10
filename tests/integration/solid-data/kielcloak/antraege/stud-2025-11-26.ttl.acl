@@ -1,0 +1,21 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+<#Plietsch>
+    a acl:Authorization;
+    acl:accessTo <./stud-2025-11-26.ttl>;
+    acl:agent <http://localhost:3000/stud/profile/card#me>;
+    acl:mode acl:Read.
+
+<#owner>
+    a acl:Authorization;
+    acl:agent <http://localhost:3000/kielcloak/profile/card#me>;
+    # Optional owner email, to be used for account recovery:
+    
+    # Set the access to the root storage folder itself
+    acl:accessTo <./stud-2025-11-26.ttl>;
+    # All resources will inherit this authorization, by default
+    acl:default <./>;
+    # The owner has all of the access modes allowed
+    acl:mode
+        acl:Read, acl:Write, acl:Control.
