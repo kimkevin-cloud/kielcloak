@@ -1,0 +1,57 @@
+@prefix : <http://localhost:3000/kielcloak/antraege/stud-2025-11-26#>.
+@prefix schema: <http://schema.org/>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix aiiso: <https://vocab.org/aiiso#>.
+@prefix fibo-fbc-pas-caa: <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/>.
+@prefix org: <https://www.w3.org/ns/org#>.
+
+# Applicant / Antragsteller
+:person1
+  a schema:Person ;
+    schema:name "Petra"^^xsd:string;                # Vorname
+    schema:familyName "Plietsch"^^xsd:string;       # Nachname
+    schema:birthDate "1990-01-01"^^xsd:date;        # Geburtsdatum
+    schema:birthPlace :birthPlace;
+    schema:PostalAddress :address;
+    fibo-fbc-pas-caa:Account :bankAccount.
+
+# Geburtsort
+:birthplace
+  a schema:PostalAddress;
+    schema:streetAddress "Musterstraße 2"^^xsd:string;
+    schema:addressLocality "Kiel"^^xsd:string;
+    schema:postalCode "24103"^^xsd:string;
+    schema:addressCountry "DE"^^xsd:string.
+
+# Wohnort / Anschrift
+:address
+  a schema:PostalAddress;
+    schema:streetAddress "Musterstraße 1"^^xsd:string;
+    schema:addressLocality "Kiel"^^xsd:string;
+    schema:postalCode "24103"^^xsd:string;
+    schema:addressCountry "DE"^^xsd:string;
+    schema:identifier "MG-2025-0456"^^xsd:string;
+    schema:startDate "2025-09-01"^^xsd:date;
+    owl:sameAs <http://localhost:3000/lord/tenants/room3>.
+
+# Organisation (Studium / Ausbildung / Berufsfachschule / Fachschule)
+:org
+  a aiiso:Organization; ;
+    schema:name "Christian-Albrechts-Universität zu Kiel"^^xsd:string;
+    schema:startDate "2025-10-01"^^xsd:date.      # Datum seit Beginn Studium/Lehre
+
+# Bankkonto (Zahlungsoption)
+:bankAccount
+  a fibo-fbc-pas-caa:Account;
+    fibo-fbc-pas-caa:AccountHolder :person1;
+    fibo-fbc-pas-caa:AccountProvider "Förde Sparkasse"^^xsd:string;
+    fibo-fbc-pas-caa:AccountIdentifier "DE12345678900000000000"^^xsd:string.
+
+# Antrag / Application - spezifisch für das Begrüßungsgeld
+:application1
+    schema:Person :person1;
+    aiiso:Organization :org;
+    fibo-fbc-pas-caa:Account: :bankAccount;
+    dct:created "2025-11-26"^^xsd:date.       # Datum des Auftrags / Antragsdatum

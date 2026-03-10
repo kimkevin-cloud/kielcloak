@@ -1,0 +1,26 @@
+@prefix : <http://localhost:3000/bank/meinKiel/profile#>.
+@prefix schema: <http://schema.org/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix fibo-fbc-pas-caa: <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix aiiso: <https://vocab.org/aiiso#>.
+@prefix org: <https://www.w3.org/ns/org#>.
+
+:me
+  a schema:Person;
+    schema:name "Förde Sparkasse"^^xsd:string;
+    schema:address :address;
+    owl:sameAs :bank;
+    schema:accountId "dritte".
+
+:bank
+  a schema:Person;
+    schema:identifier "bank-001"^^xsd:string;
+    owl:sameAs :me.
+
+:address
+  a schema:PostalAddress;
+    schema:streetAddress "Bankstraße 1"^^xsd:string;
+    schema:addressLocality "Kiel"^^xsd:string;
+    schema:postalCode "24103"^^xsd:string;
+    schema:addressCountry "DE"^^xsd:string.

@@ -1,0 +1,17 @@
+@prefix acl: <http://www.w3.org/ns/auth/acl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+# MailBox: allow Kielcloak read & write, owner full control
+<#mailbox-access>
+    a acl:Authorization;
+    acl:accessTo <./>;
+    acl:default <./>;
+    acl:agent <http://localhost:3000/kielcloak/profile/card#me>;
+    acl:mode acl:Read, acl:Write.
+
+<#owner>
+    a acl:Authorization;
+    acl:agent <http://localhost:3000/uni/profile/card#me>;
+    acl:accessTo <./>;
+    acl:default <./>;
+    acl:mode acl:Read, acl:Write, acl:Control.

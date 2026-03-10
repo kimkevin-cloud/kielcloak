@@ -1,0 +1,23 @@
+@prefix : <http://localhost:3000/lord/addresses/musterstrasse1#>.
+@prefix schema: <http://schema.org/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+:landlord
+  a schema:Person;
+    schema:name "Studentenwerk SH"^^xsd:string.
+
+:tenant
+  a schema:Person;
+    schema:name "Petra Plietsch"^^xsd:string;
+    schema:startDate "2025-09-01"^^xsd:date.
+
+:address
+  a schema:PostalAddress;
+    schema:streetAddress "Musterstraße 1"^^xsd:string;
+    schema:addressLocality "Kiel"^^xsd:string;
+    schema:postalCode "24103"^^xsd:string;
+    schema:addressCountry "DE"^^xsd:string;
+    schema:identifier "MG-2025-0456"^^xsd:string;
+    owl:sameAs <http://localhost:3000/stud/meinKiel/profile>.
+

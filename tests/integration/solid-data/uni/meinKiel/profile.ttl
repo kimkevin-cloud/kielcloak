@@ -1,0 +1,26 @@
+@prefix : <http://localhost:3000/uni/meinKiel/profile#>.
+@prefix schema: <http://schema.org/>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix fibo-fbc-pas-caa: <https://spec.edmcouncil.org/fibo/ontology/FBC/ProductsAndServices/ClientsAndAccounts/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix aiiso: <https://vocab.org/aiiso#>.
+@prefix org: <https://www.w3.org/ns/org#>.
+
+:me
+  a schema:Person;
+    schema:name "Christian-Albrecht-Universität zu Kiel"^^xsd:string;
+    schema:address :address;
+    owl:sameAs :uni;
+    schema:accountId "dritte".
+
+:uni
+  a schema:Person;
+    schema:identifier "uni-001"^^xsd:string;
+    owl:sameAs :me.
+
+:address
+  a schema:PostalAddress;
+    schema:streetAddress "Leibnizstraße 3"^^xsd:string;
+    schema:addressLocality "Kiel"^^xsd:string;
+    schema:postalCode "24118"^^xsd:string;
+    schema:addressCountry "DE"^^xsd:string.

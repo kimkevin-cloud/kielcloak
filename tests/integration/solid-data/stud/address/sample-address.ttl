@@ -1,0 +1,8 @@
+@prefix schema: <http://schema.org/>.
+@prefix dct: <http://purl.org/dc/terms/>.
+
+<> a schema:PostalAddress;
+   schema:streetAddress "Fleethörn 42";
+   schema:postalCode "24103";
+   schema:addressLocality "Kiel";
+   dct:created "2025-11-23".

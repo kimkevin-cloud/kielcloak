@@ -11,7 +11,7 @@
     "moduleResolution": "bundler",
     "target": "ES2020", // For nodejs:
     // "lib": ["esnext"],
-    "types": ["node"],
+    "types": ["node", "vitest"],
     // and npm install -D @types/node
 
     // Other Outputs
@@ -44,7 +44,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "tests/**/*", "vitest.*.ts"],
   "exclude": ["node_modules", "build"]
 }
 

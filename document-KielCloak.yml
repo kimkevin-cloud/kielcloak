@@ -29,7 +29,7 @@ paths:
                     ]
                 web_id:
                   type: string
-                  description: "WebId zum Solid Pod des Nutzers"
+                  description: WebId zum Solid Pod des Nutzers
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
               required:
                 - address_src_url
@@ -60,7 +60,7 @@ paths:
               properties:
                 web_id:
                   type: string
-                  description: "WebId zum Solid Pod des Nutzers"
+                  description: WebId zum Solid Pod des Nutzers
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
                 antrag_type:
                   type: string
@@ -85,7 +85,63 @@ paths:
                     type: string
                     example: "ok"
         "400":
-          description: Invalid input
+          description: Invalid input or duplicate application
+        "500":
+          description: Server error
+        "401":
+          description: Unauthorized
+  /antrag/all:
+    get:
+      summary: Gibt alle Anträge des Nutzers zurück
+      parameters:
+        - name: web_id
+          in: query
+          required: true
+          description: base64 enkodierte WebId zum Solid Pod des Nutzers
+          schema:
+            type: string
+            example: aHR0cDovL2xvY2FsaG9zdDozMDAwL3N0dWQvcHJvZmlsZS9jYXJkI21l
+            description: example ist base64 encodierte WebID 'http://localhost:3000/stud/profile/card#me'
+      responses:
+        "200":
+          description: Anträgen des Nutzers gefunden! (antrag_type und timestamp als JSON)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        antrag_type:
+                          type: string
+                          example: begruessungsgeld
+                        timestamp:
+                          type: integer
+                          format: int64
+                          example: 1768143644
+                  status:
+                    type: string
+                    example: ok
+        "201":
+          description: Nutzer hat noch keine Anträge gestellt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forms:
+                    type: array
+                    description: ist immer leer
+                    example: []
+        "400":
+          description: Fehlende oder ungültige web_id.
+        "500":
+          description: Internal server error.
+        "503":
+          description: Unauthorized
   /send_webid:
     post:
       summary: Meldung der WebId des Studenten
@@ -97,11 +153,11 @@ paths:
             schema:
               type: object
               properties:
-                web_id:
+                tenantWebId:
                   type: string
                   description: "WebId zum Solid Pod des Studenten"
                   example: "https://solid.valetudo.casa/stud/profile/card#me"
-                givenNamee:
+                givenName:
                   type: string
                   description: "Vorname des Studenten"
                   example: "Petra"
@@ -113,7 +169,7 @@ paths:
                   type: string
                   description: "Voller Name des Studenten"
                   example: "Petra Clara Plietsch"
-                tenantWebId:
+                landlordWebId:
                   type: string
                   description: "WebId des Vermieter Pods"
                   example: "https://solid.valetudo.casa/lord/profile/card#me"
@@ -136,3 +192,7 @@ paths:
                     example: "ok"
         "400":
           description: Invalid input
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal server error
